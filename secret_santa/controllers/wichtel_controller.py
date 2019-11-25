@@ -1,49 +1,45 @@
 import connexion
 import six
 
-from secret_santa.models.participat_details import ParticipantDetails  # noqa: E501
+import uuid
+
+from secret_santa.models.participant_details import ParticipantDetails  # noqa: E501
 from secret_santa.models.participation import Participation  # noqa: E501
 from secret_santa import util
 
+from flask import jsonify, abort, current_app as app
 
-def get_participant_details(participant_id):  # noqa: E501
-    """Returns the participat details
+def get_participant_details(participant_id: uuid):  # noqa: E501
+    """Returns the participant details"""
 
-     # noqa: E501
+    user = app.mongo.db.users.find_one_or_404({'id': str(participant_id)})
+    return jsonify({ 'firstName': user['firstName'], 'lastName': user['lastName']})
 
-    :param participant_id: ID of participant
-    :type participant_id: 
+def get_participation(participant_id: uuid):  # noqa: E501
+    """Returns the participation status"""
 
-    :rtype: ParticipantDetails
-    """
-    return 'do some magic!'
-
-
-def get_participation(participant_id):  # noqa: E501
-    """Returns the participation status
-
-     # noqa: E501
-
-    :param participant_id: ID of participant
-    :type participant_id: 
-
-    :rtype: Participation
-    """
-    return 'do some magic!'
+    print(participant_id)
+    user = app.mongo.db.users.find_one_or_404({'id': str(participant_id)})
+    print(user)
+    return {'participating': user['participation']}
 
 
-def update_participation(body, participant_id):  # noqa: E501
-    """Update a participation
+def update_participation(body, participant_id: uuid):  # noqa: E501
+    """Update a participation"""
 
-     # noqa: E501
-
-    :param body: Participation details
-    :type body: dict | bytes
-    :param participant_id: ID of participant
-    :type participant_id: 
-
-    :rtype: None
-    """
     if connexion.request.is_json:
         body = Participation.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+
+        if body.participating is not None:
+
+            update_result = app.mongo.db.users.update_one({'id': str(participant_id)}, {'$set': {'participation': body.participating}})
+            
+            if update_result.matched_count  == 0:
+                return None, 404
+            elif update_result.matched_count == 1:
+                return None, 200
+        else:
+
+            return None, 400
+            
+    return None ,500

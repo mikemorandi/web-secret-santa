@@ -2,7 +2,7 @@ from connexion.apps.flask_app import FlaskJSONEncoder
 import six
 
 from secret_santa.models.base_model_ import Model
-
+from bson import ObjectId
 
 class JSONEncoder(FlaskJSONEncoder):
     include_nulls = False
@@ -17,4 +17,6 @@ class JSONEncoder(FlaskJSONEncoder):
                 attr = o.attribute_map[attr]
                 dikt[attr] = value
             return dikt
+        if isinstance(o, ObjectId):
+            return str(o)       
         return FlaskJSONEncoder.default(self, o)

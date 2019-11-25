@@ -5,7 +5,7 @@ from __future__ import absolute_import
 from flask import json
 from six import BytesIO
 
-from secret_santa.models.participat_details import ParticipantDetails  # noqa: E501
+from secret_santa.models.participant_details import ParticipantDetails  # noqa: E501
 from secret_santa.models.participation import Participation  # noqa: E501
 from secret_santa.test import BaseTestCase
 
@@ -16,7 +16,7 @@ class TestWichtelController(BaseTestCase):
     def test_get_participant_details(self):
         """Test case for get_participant_details
 
-        Returns the participat details
+        Returns the participant details
         """
         response = self.client.open(
             '/api/v1/users/{participantId}'.format(participant_id='38400000-8cf0-11bd-b23e-10b96e4ef00d'),
