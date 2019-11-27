@@ -59,6 +59,9 @@ paths:
               $ref: '#/components/schemas/participation'
         required: true
       responses:
+        "204":
+          description: Participant updated
+          content: {}
         "400":
           description: Invalid request
           content: {}
