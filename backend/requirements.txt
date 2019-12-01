@@ -3,3 +3,4 @@ python_dateutil == 2.6.0
 setuptools >= 21.0.0
 Flask-PyMongo-2.3.0
 Flask-Cors==3.0.8
+Flask-APScheduler==1.11.0
