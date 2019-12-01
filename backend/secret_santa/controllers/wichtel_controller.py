@@ -11,6 +11,12 @@ from secret_santa import util
 
 from flask import jsonify, abort, current_app as app
 
+from .mail_controller import send_update
+
+def get_settings():
+    settings = app.mongo.db.settings.find_one_or_404({})
+    return jsonify({ 'retrySec': settings['retry_sec'], 'drawingTime': settings['drawing_time']})
+
 def get_participant_details(participant_id: uuid):  # noqa: E501
     """Returns the participant details"""
 
@@ -40,6 +46,9 @@ def update_participation(body, participant_id: uuid):  # noqa: E501
                 if update_result.matched_count  == 0:
                     return None, 404
                 elif update_result.matched_count == 1:
+
+                    send_update(participant_id, body.participating)
+
                     return None, 204
             else:
                 return None, 429                    

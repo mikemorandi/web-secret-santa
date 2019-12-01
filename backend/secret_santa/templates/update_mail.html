@@ -1,0 +1,12 @@
+<html>
+    <head></head>
+    <body>
+        <p>Lieber {{firstName}}</p>
+        {% if participating %}        
+        <p>Super, du hast dich für das Weihnachts-Wichteln angemeldet</p>
+        {% else %}
+        <p>Du hast dich für das Weihnachts-Wichteln abgemeldet.Bis am {{ drawTime.strftime('%d.%m.%Y %H:%M') }} kannst du dich <a href="{{registerLink}}">hier </a>wieder wieder anmelden</p>
+        {% endif %}
+        <p>Gruss, Michael</p>
+    </body>
+</html>

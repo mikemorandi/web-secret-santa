@@ -1,17 +1,18 @@
 <template>
   <div class="container">
-    <b-alert :show="dismissCountDown" dismissible fade variant="warning" @dismissed="onAlertDismissed" @dismiss-count-down="countDownChanged">
-      <p>Du hast deine Meinung zu schnell geändert, bitte warte {{ dismissCountDown }} Sekunden...</p>
-      <b-progress variant="warning" :max="dismissSecs" :value="dismissCountDown" height="4px" ></b-progress>
+    <b-alert dismissible fade :show="errorMessage" @dismissed="errorMessage=null" variant="danger">{{errorMessage}}</b-alert>
+    <b-alert :show="throttlingAlert.dismissCountDown" dismissible fade variant="warning" @dismissed="onAlertDismissed" @dismiss-count-down="countDownChanged">
+      <p>Du hast deine Meinung zu schnell geändert, bitte warte {{ throttlingAlert.dismissCountDown }} Sekunden...</p>
+      <b-progress variant="warning" :max="throttlingAlert.dismissSecs" :value="throttlingAlert.dismissCountDown" height="4px" ></b-progress>
     </b-alert>
     <div class="jumbotron ">
       <h1 v-if="user !== null" class="display-4">Hallo {{user.firstName}}</h1>
       <h1 v-if="user == null" class="display-4">Hoppla!</h1>
-      <p v-if="!participating" class="lead">Du nimmst beim Wichteln nicht teil</p>
-      <p v-if="participating" class="lead">Du nimmst beim Wichteln nicht teil. Die Auslosung wir Anfang Dezember durchgeführt und du wirst per E-Mail erfahren, wen du beschenken darfst.</p>
+      <p v-if="user && !participating" class="lead">Du nimmst beim Wichteln nicht teil</p>
+      <p v-if="user && participating" class="lead">Du nimmst beim Wichteln nicht teil. Die Auslosung wir Anfang Dezember durchgeführt und du wirst per E-Mail erfahren, wen du beschenken darfst.</p>
       <p v-if="user == null" class="lead">Da lief was schief. Deine ID ist uns unbekannt</p>
       <hr class="my-4">
-      <b-button v-on:click="toggleParticipation" v-bind:disabled="dismissCountDown > 0"  v-bind:class="{ 'btn-success': !participating, 'btn-danger': participating }">
+      <b-button v-on:click="toggleParticipation" v-bind:disabled="throttlingAlert.dismissCountDown > 0"  v-bind:class="{ 'btn-success': !participating, 'btn-danger': participating }">
         {{participating ? 'Nicht mehr teilnehmen' : 'Jetzt teilnehmen '}}
       </b-button>
     </div>
@@ -31,9 +32,12 @@ export default {
       user: null,
       userId: null,
       participating: false,
-      dismissSecs: 5,
-      dismissCountDown: 0,
-      showDismissibleAlert: false
+      throttlingAlert: {
+        dismissSecs: 5,
+        dismissCountDown: 0,
+        showDismissibleAlert: false
+      },
+      errorMessage: null
     }
   },
   watch: {
@@ -43,6 +47,13 @@ export default {
   },
   mounted () {
     this.setUserId(this.$route.params.userId)
+    axios.get('http://localhost:8080/api/v1/settings')
+      .then(response => {
+        this.throttlingAlert.dismissSecs = response.data.retrySec
+      })
+      .catch(e => {
+        this.user = null
+      })
   },
   methods: {
     setUserId (userId) {
@@ -78,21 +89,22 @@ export default {
         })
         .catch(e => {
           if (e.response && e.response.status === 429) {
-            this.showAlert()
+            this.showThrottlingAlert()
+          } else if (e.response && e.response.status === 500) {
+            this.errorMessage = e.response.detail
           } else {
             this.user = null
-            console.log(e)
           }
         })
     },
     countDownChanged (dismissCountDown) {
-      this.dismissCountDown = dismissCountDown
+      this.throttlingAlert.dismissCountDown = dismissCountDown
     },
-    showAlert () {
-      this.dismissCountDown = this.dismissSecs
+    showThrottlingAlert () {
+      this.throttlingAlert.dismissCountDown = this.throttlingAlert.dismissSecs
     },
     onAlertDismissed () {
-      this.dismissCountDown = 0
+      this.throttlingAlert.dismissCountDown = 0
     }
   }
 }

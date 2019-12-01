@@ -9,6 +9,15 @@ tags:
 - name: wichtel
   description: Wichtel client api
 paths:
+  /settings:
+    get:
+      tags:
+      - wichtel
+      operationId: get_settings
+      x-openapi-router-controller: secret_santa.controllers.wichtel_controller
+      responses:
+        "200": 
+          description: ok
   /participations/{participantId}:
     get:
       tags:
