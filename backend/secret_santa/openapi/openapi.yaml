@@ -18,6 +18,60 @@ paths:
       responses:
         "200": 
           description: ok
+  /assignments/{participantId}:
+    get:
+      tags:
+      - wichtel
+      summary: Returns the assignments of the participant
+      operationId: get_draw
+      parameters:
+      - name: participantId
+        in: path
+        description: ID of participant
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Participant status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDetails'
+        "404":
+          description: no assignments for participant
+          content: {}
+      x-openapi-router-controller: secret_santa.controllers.wichtel_controller              
+  /participations/{participantId}:
+    get:
+      tags:
+      - wichtel
+      summary: Returns the participation status
+      operationId: get_participation
+      parameters:
+      - name: participantId
+        in: path
+        description: ID of participant
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "200":
+          description: Participant status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/participation'
+        "404":
+          description: Participant not found
+          content: {}
+      x-openapi-router-controller: secret_santa.controllers.wichtel_controller          
   /participations/{participantId}:
     get:
       tags:
@@ -100,7 +154,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ParticipantDetails'
+                $ref: '#/components/schemas/PersonDetails'
         "404":
           description: Participant not found
           content: {}
@@ -114,7 +168,7 @@ components:
           type: boolean
       example:
         participating: true
-    ParticipantDetails:
+    PersonDetails:
       type: object
       properties:
         firstName:
@@ -126,4 +180,3 @@ components:
       example:
         firstName: Samuel
         lastName: Vennmann
-
