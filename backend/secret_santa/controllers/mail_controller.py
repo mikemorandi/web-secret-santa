@@ -12,7 +12,7 @@ def send_update(participant_id: uuid, participating: bool):
 
     if user and settings:
 
-        subject = "Du nimmst beim Wichteln teil" if participating else "Du nimmst beim Wichteln nicht teil"
+        subject = 'Du nimmst beim Wichteln teil' if participating else 'Du nimmst beim Wichteln nicht teil'
 
         msg = Message(subject,
                         recipients=[user['email']])
@@ -25,6 +25,32 @@ def send_update(participant_id: uuid, participating: bool):
                                     drawTime=settings['drawing_time'])
         try:
             app.mail.send(msg)
-            logger.error('Sent participation update mail to: {:s}, uuid={:s}'.format(user['email'], str(participant_id)))
+            logger.info('Sent participation update mail to: {:s}, uuid={:s}'.format(user['email'], str(participant_id)))
         except:
-            logger.error('Could not send participation update mail to: {:s}, uuid={:s}'.format(user['email'], str(participant_id)))
+            logger.info('Could not send participation update mail to: {:s}, uuid={:s}'.format(user['email'], str(participant_id)))
+    else:
+        logger.error('query for participant {:s} failed'.format(str(participant_id)))
+
+def send_assignment(donor_id: uuid, donee_id: uuid):
+
+    donor = app.mongo.db.users.find_one({'id': str(donor_id)}, {'firstName': 1, 'email': 1})
+    donee = app.mongo.db.users.find_one({'id': str(donee_id)}, {'firstName': 1})
+    settings = app.mongo.db.settings.find_one({})
+
+    if donor and donee:
+
+        subject = 'Wichtel-Auslosung'
+
+        msg = Message('Wichtel auslosung', recipients=[donor['email']])
+        
+        msg.body = 'Für dich wurde {:s} ausgelost'.format(donee['firstName'])
+        msg.html = render_template('assignment_mail.html', 
+                                    firstName=donor['firstName'], 
+                                    doneeName=donee['firstName'])
+        try:
+
+            app.mail.send(msg)
+            logger.info('Sent assignment update mail to: {:s}, uuid={:s}'.format(donor['email'], str(donor_id)))
+            #logger.info('{:s} -> {:s}'.format(donor['firstName'], donee['firstName']))
+        except:
+            logger.info('Could not send assignment update mail to: {:s}, uuid={:s}'.format(donor['email'], str(donor_id)))
