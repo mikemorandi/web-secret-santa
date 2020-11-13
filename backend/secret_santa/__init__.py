@@ -7,9 +7,11 @@ from flask_cors import CORS
 from flask_mail import Mail
 from flask_apscheduler import APScheduler
 
+import os
 import logging
 import logging.handlers
 from sys import stdout
+from datetime import datetime
 
 from .services.drawing_service import draw_assignments
 
@@ -28,18 +30,26 @@ app.app.json_encoder = encoder.JSONEncoder
 app.add_api('openapi.yaml', arguments={'title': 'Wichtel API'}, pythonic_params=True)
 
 # Mongo
-app.app.config['MONGO_URI'] = 'mongodb://mongodb:27017/secretsanta'
+print('Connecting to {:s}'.format(os.environ.get('MONGO_URI')))
+app.app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
 cors = CORS(app.app, resources={r'/api/v1/*': {'origins': '*'}})
 app.app.mongo = PyMongo(app.app)
 
+def populate_db():
+    if not app.app.mongo.db.settings.find_one():
+        config = { "retry_sec" : 3, "drawing_time" : datetime(datetime.now().year, 12, 15, 12, 0, 0) }
+        app.app.mongo.db.settings.insert_one(config)
+
+populate_db()
+
 # Mail
-app.app.config['MAIL_SERVER'] = 'mail.server.net'
-app.app.config['MAIL_PORT'] = '587'
-app.app.config['MAIL_USE_TLS'] = True
-app.app.config['MAIL_USERNAME'] = 'sender@domain.com'
-app.app.config['MAIL_DEFAULT_SENDER'] = ('Secret Santa', app.app.config['MAIL_USERNAME'])
-app.app.config['MAIL_PASSWORD'] = 'INSERTWPHERE'
-app.app.config['PUBLIC_BASE_URL'] = 'http://localhost:8081'
+app.app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER')
+app.app.config['MAIL_PORT'] = os.environ.get('MAIL_PORT')
+app.app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS')
+app.app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
+app.app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.app.config['PUBLIC_BASE_URL'] = os.environ.get('PUBLIC_BASE_URL')
 app.app.mail = Mail(app.app)
 
 #Scheduler
