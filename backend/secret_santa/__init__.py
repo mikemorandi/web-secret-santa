@@ -15,12 +15,17 @@ from datetime import datetime
 
 from .services.drawing_service import draw_assignments
 
-sematext_handler = logging.handlers.SysLogHandler(address=('logsene-syslog-receiver.eu.sematext.com', 514))
-formater = logging.Formatter("7510fb74-d7ac-40e3-b2e3-a686135f0a63:%(message)s")
-sematext_handler.setFormatter(formater)
+if os.environ.get('SYSLOG_HOST') and os.environ.get('SYSLOG_FORMAT'):
+    sematext_handler = logging.handlers.SysLogHandler(address=(os.environ.get('SYSLOG_HOST'), 514))
+    formater = logging.Formatter(os.environ.get('SYSLOG_FORMAT'))
+    #logsene-syslog-receiver.eu.sematext.com
+    #7510fb74-d7ac-40e3-b2e3-a686135f0a63:%(message)s
+    sematext_handler.setFormatter(formater)
 
-handlers = [sematext_handler, logging.StreamHandler(stdout)]
-logging.basicConfig(level=logging.INFO, handlers=handlers)
+    handlers = [sematext_handler, logging.StreamHandler(stdout)]
+    logging.basicConfig(level=logging.INFO, handlers=handlers)
+else:
+    logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 

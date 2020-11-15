@@ -26,7 +26,8 @@ def send_update(participant_id: uuid, participating: bool):
         try:
             app.mail.send(msg)
             logger.info('Sent participation update mail to: {:s}, uuid={:s}'.format(user['email'], str(participant_id)))
-        except:
+        except Exception as e:
+            print(e)
             logger.info('Could not send participation update mail to: {:s}, uuid={:s}'.format(user['email'], str(participant_id)))
     else:
         logger.error('query for participant {:s} failed'.format(str(participant_id)))
