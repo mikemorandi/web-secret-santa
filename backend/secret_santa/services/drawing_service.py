@@ -24,7 +24,7 @@ def get_constraint_indices(users):
 
 def draw_assignments():
 
-    x = app.mongo.db.assignments.remove({})
+    x = app.mongo.db.assignments.delete_many({})
     participants = list(app.mongo.db.users.find({'participation': True}, {'id': 1}))
 
     users = [u['id'] for u in participants]
@@ -35,6 +35,6 @@ def draw_assignments():
     assignments = random_drawer.draw()
 
     for donor, donee in assignments.items():
-        if app.mongo.db.assignments.count({'donor': participants[donor]['id'], 'donee': participants[donee]['id']}) == 0:
-            app.mongo.db.assignments.insert({'donor': participants[donor]['id'], 'donee': participants[donee]['id']})
+        if app.mongo.db.assignments.count_documents({'donor': participants[donor]['id'], 'donee': participants[donee]['id']}) == 0:
+            app.mongo.db.assignments.insert_one({'donor': participants[donor]['id'], 'donee': participants[donee]['id']})
         send_assignment(participants[donor]['id'], participants[donee]['id'])

@@ -3,7 +3,7 @@
     <body>
         <p>Hallo {{firstName}}</p>
         {% if participating %}        
-        <p>Super, du hast dich für das Weihnachts-Wichteln angemeldet. Die Auslosung findet am {{ drawTime.strftime('%d.%m.%Y %H:%M') }} statt.<br/>Solltest du deine Meinung ändern, kannst du dich <a href="{{registerLink}}">unter diesem Link</a> wieder wieder abmelden</p>
+        <p>Du hast dich für das Weihnachts-Wichteln angemeldet. Die Auslosung findet am {{ drawTime.strftime('%d.%m.%Y %H:%M') }} statt.<br/>Solltest du deine Meinung ändern, kannst du dich <a href="{{registerLink}}">unter diesem Link</a> wieder wieder abmelden</p>
         {% else %}
         <p>Schade, du hast dich für das Weihnachts-Wichteln abgemeldet.<br/>Bis am {{ drawTime.strftime('%d.%m.%Y %H:%M') }} kannst du dich <a href="{{registerLink}}">unter diesem Link</a> wieder wieder anmelden</p>
         {% endif %}
