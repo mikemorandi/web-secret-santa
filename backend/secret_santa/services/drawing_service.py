@@ -1,4 +1,5 @@
 import logging
+from typing import List, Tuple
 from flask import current_app as app
 
 from .random_assignment import RandomAssignmentDrawing
@@ -6,35 +7,57 @@ from ..controllers.mail_controller import send_assignment
 
 logger = logging.getLogger(__name__)
 
-def get_preassignments_indices(users):
-    pre_assignments = app.mongo.db.pre_assignments.find({})
+
+def get_preassignments_indices() -> List[Tuple[int]]:
+    pre_assignments = app.mongo.pre_assignments.find({})
     try:
-        return [( users.index(i['donor']), users.index(i['donee']) ) for i in pre_assignments]
+        return [(i["donor"], i["donee"]) for i in pre_assignments]
     except:
-        logger.error('An error occured during pre-assigment processing')
+        logger.error("An error occured during pre-assigment processing")
         return []
 
-def get_constraint_indices(users):
-    constraint_users = app.mongo.db.users.find({'participation': True, 'spouse':{'$ne': None}}, {'id': 1, 'spouse': 1, 'firstName': 1})
-    try:
-        return [( users.index(i['id']), users.index(i['spouse']) ) for i in constraint_users if i['spouse'] in users]
-    except Exception as e:
-        logger.error(e)
-        return []
+
+def get_constraint_indices(users) -> List[Tuple[int]]:
+    """Returns a list of tuples with user indices which shall not be assigned to each other"""
+
+    constraint_users = app.mongo.users.find(
+        {"id": {"$in": users}, "participation": True, "exclusions": {"$ne": None}},
+        {"id": 1, "exclusions": 1},
+    )
+
+    constrain_tuples = [
+        [(u["id"], t) for t in u["exclusions"]]
+        for u in constraint_users
+        if "exclusions" in u
+    ]
+
+    return [item for sublist in constrain_tuples for item in sublist]
+
 
 def draw_assignments():
 
-    x = app.mongo.db.assignments.delete_many({})
-    participants = list(app.mongo.db.users.find({'participation': True}, {'id': 1}))
+    app.mongo.assignments.delete_many({})
 
-    users = [u['id'] for u in participants]
-    pre_assignments = get_preassignments_indices(users)
-    constraints = get_constraint_indices(users)
+    participants = {
+        user["id"]: user
+        for user in app.mongo.users.find(
+            {"participation": True}, {"id": 1, "firstName": 1}
+        )
+    }
 
-    random_drawer = RandomAssignmentDrawing(users, constraints=constraints, pre_assignments=pre_assignments)
+    user_ids = [id for id in participants.keys()]
+
+    pre_assignments = get_preassignments_indices()
+    constraints = get_constraint_indices(user_ids)
+
+    random_drawer = RandomAssignmentDrawing(
+        user_ids, constraints=constraints, pre_assignments=pre_assignments
+    )
     assignments = random_drawer.draw()
 
     for donor, donee in assignments.items():
-        if app.mongo.db.assignments.count_documents({'donor': participants[donor]['id'], 'donee': participants[donee]['id']}) == 0:
-            app.mongo.db.assignments.insert_one({'donor': participants[donor]['id'], 'donee': participants[donee]['id']})
-        send_assignment(participants[donor]['id'], participants[donee]['id'])
+        app.mongo.assignments.insert_one({"donor": donor, "donee": donee})
+        logger.info(
+            f'{participants[donor]["firstName"]} -> {participants[donee]["firstName"]}'
+        )
+        send_assignment(participants[donor]["id"], participants[donee]["id"])

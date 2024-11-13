@@ -1,78 +1,66 @@
-
-import connexion
-
-from secret_santa import encoder
-from flask_pymongo import PyMongo
-from flask_cors import CORS
+from connexion import FlaskApp
 from flask_mail import Mail
 from flask_apscheduler import APScheduler
-
-import os
-import logging
-import logging.handlers
-from sys import stdout
-from datetime import datetime
-
+from pymongo import MongoClient
+from dotenv import load_dotenv
 from .services.drawing_service import draw_assignments
+from datetime import datetime, timedelta
+import os
+import certifi
+import logging
 
-if os.environ.get('SYSLOG_HOST') and os.environ.get('SYSLOG_FORMAT'):
-    sematext_handler = logging.handlers.SysLogHandler(address=(os.environ.get('SYSLOG_HOST'), 514))
-    formater = logging.Formatter(os.environ.get('SYSLOG_FORMAT'))
-    #logsene-syslog-receiver.eu.sematext.com
-    #7510fb74-d7ac-40e3-b2e3-a686135f0a63:%(message)s
-    sematext_handler.setFormatter(formater)
-
-    handlers = [sematext_handler, logging.StreamHandler(stdout)]
-    logging.basicConfig(level=logging.INFO, handlers=handlers)
-else:
-    logging.basicConfig(level=logging.INFO)
+load_dotenv()
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
-# Connexion
-app = connexion.App(__name__, specification_dir='./openapi/')
-app.app.json_encoder = encoder.JSONEncoder
-app.add_api('openapi.yaml', arguments={'title': 'Wichtel API'}, pythonic_params=True)
+# API
+app = FlaskApp(__name__, specification_dir="./openapi/")
+app.add_api("openapi.yaml", arguments={"title": "Wichtel API"}, pythonic_params=True)
 
-# Mongo
-print('Connecting to {:s}'.format(os.environ.get('MONGO_URI')))
-app.app.config['MONGO_URI'] = os.environ.get('MONGO_URI')
-cors = CORS(app.app, resources={r'/api/v1/*': {'origins': '*'}})
-app.app.mongo = PyMongo(app.app)
+# DB
+connection_string = (
+    os.getenv("MONGO_URI")
+    .replace("{USER}", os.getenv("MONGO_USER"))
+    .replace("{PWD}", os.getenv("MONGO_PWD"))
+)
 
-def populate_db():
-    if not app.app.mongo.db.settings.find_one():
-        config = { "retry_sec" : 3, "drawing_time" : datetime(datetime.now().year, 12, 15, 12, 0, 0) }
-        app.app.mongo.db.settings.insert_one(config)
+logger.info(print(os.getenv("MONGO_URI")))
 
-populate_db()
+app.app.mongo_client = MongoClient(connection_string, tlsCAFile=certifi.where())
+app.app.mongo = app.app.mongo_client.secretsanta
 
 # Mail
-app.app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER')
-app.app.config['MAIL_PORT'] = os.environ.get('MAIL_PORT')
-app.app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS')
-app.app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
-app.app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
-app.app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-app.app.config['PUBLIC_BASE_URL'] = os.environ.get('PUBLIC_BASE_URL')
+app.app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
+app.app.config["MAIL_PORT"] = os.getenv("MAIL_PORT")
+app.app.config["MAIL_USE_TLS"] = os.getenv("MAIL_USE_TLS")
+app.app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_DEFAULT_SENDER")
+app.app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+app.app.config["PUBLIC_BASE_URL"] = os.getenv("PUBLIC_BASE_URL")
+app.app.config["MAIL_DEBUG_MAIL_ADRESS"] = os.getenv("MAIL_DEBUG_MAIL_ADRESS")
 app.app.mail = Mail(app.app)
 
-#Scheduler
+if app.app.config["MAIL_DEBUG_MAIL_ADRESS"]:
+    logger.info(f'Mail debugging enabled: {app.app.config["MAIL_DEBUG_MAIL_ADRESS"] }')
+
+# Scheduler
 scheduler = APScheduler()
 scheduler.init_app(app.app)
 
-settings = app.app.mongo.db.settings.find_one({})
+settings = app.app.mongo.settings.find_one()
 if settings:
 
-    logger.info('Scheduling draw for {}'.format(settings['drawing_time']))
+    logger.info("Scheduling draw for {}".format(settings["drawing_time"]))
 
-    @scheduler.task('date', run_date=settings['drawing_time'])
-    #@scheduler.task('interval', seconds=4)
+    @scheduler.task("date", run_date=settings["drawing_time"])
+    # @scheduler.task("date", run_date=(datetime.now() + timedelta(seconds=5)))
     def draw_assignments_job():
         with app.app.app_context():
             try:
                 draw_assignments()
             except Exception as e:
-                logging.error('The drawing failed: {:s}'.format(str(e)))
+                logging.error("The drawing failed: {:s}".format(str(e)))
 
-app.app.apscheduler.start()
+
+scheduler.start()

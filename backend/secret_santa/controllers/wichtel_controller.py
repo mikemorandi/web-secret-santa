@@ -1,80 +1,126 @@
-import connexion
-import six
+from connexion.problem import problem
+from connexion.exceptions import BadRequestProblem
 
 import uuid
-import datetime
-from datetime import timedelta
-
-from secret_santa.models.participant_details import ParticipantDetails  # noqa: E501
-from secret_santa.models.participation import Participation  # noqa: E501
-from secret_santa import util
-
-from flask import jsonify, abort, current_app as app
+import pytz
+from datetime import datetime, timezone, timedelta
+from flask import jsonify, current_app as app
 
 from .mail_controller import send_update
 
-def get_settings():
-    settings = app.mongo.db.settings.find_one_or_404({})
-    return jsonify({ 'retrySec': settings['retry_sec'], 'drawingTime': settings['drawing_time']})
-
-def get_participant_details(participant_id: uuid):  # noqa: E501
-    """Returns the participant details"""
-
-    user = app.mongo.db.users.find_one_or_404({'id': str(participant_id)}, {'firstName': 1, 'lastName': 1})
-    return jsonify({ 'firstName': user['firstName'], 'lastName': user['lastName']})
-
-def get_draw(participant_id: uuid):  # noqa: E501
-    """Returns the draw results details"""
-
-    #TODO: mongo equivialent of join?
-    assignment = app.mongo.db.assignments.find_one_or_404({'donor': str(participant_id)})
-    donee = app.mongo.db.users.find_one_or_404({'id': assignment['donee']}, {'firstName': 1, 'lastName': 1})
-
-    return jsonify({ 'firstName': donee['firstName'], 'lastName': donee['lastName']})
 
 def has_lastmodified_tmstmp(db_obj) -> bool:
-    return 'lastModified' in db_obj and db_obj['lastModified'] is not None
+    return "lastModified" in db_obj and db_obj["lastModified"] is not None
 
-def get_participation(participant_id: uuid):  # noqa: E501
+
+def problem_404():
+    return problem(
+        title="NotFound",
+        detail="The requested resource was not found on the server",
+        status=404,
+    )
+
+
+def eval_or_404(input, eval):
+    if input:
+        return eval(input)
+    else:
+        return problem_404()
+
+
+def get_settings():
+    """Returns the drawing settings"""
+
+    def format_settings(s):
+        return jsonify({"retrySec": s["retry_sec"], "drawingTime": s["drawing_time"]})
+
+    return eval_or_404(app.mongo.settings.find_one(), format_settings)
+
+
+def get_participant_details(participant_id: uuid):
+    """Returns the participant details"""
+
+    def format_user(user):
+        return jsonify({"firstName": user["firstName"], "lastName": user["lastName"]})
+
+    return eval_or_404(
+        app.mongo.users.find_one(
+            {"id": str(participant_id)}, {"firstName": 1, "lastName": 1}
+        ),
+        format_user,
+    )
+
+
+def get_draw(participant_id: uuid):
+    """Returns the draw results details"""
+
+    if assignment := app.mongo.assignments.find_one({"donor": str(participant_id)}):
+
+        def format_assignment(donee):
+            return jsonify(
+                {"firstName": donee["firstName"], "lastName": donee["lastName"]}
+            )
+
+        donee = app.mongo.users.find_one(
+            {"id": assignment["donee"]}, {"firstName": 1, "lastName": 1}
+        )
+
+        return eval_or_404(donee, format_assignment)
+    else:
+        return problem_404()
+
+
+def get_participation(participant_id: uuid):
     """Returns the participation status"""
 
     print(participant_id)
-    user = app.mongo.db.users.find_one_or_404({'id': str(participant_id)}, {'participation': 1, 'lastModified': 1})
+    user = app.mongo.users.find_one(
+        {"id": str(participant_id)}, {"participation": 1, "lastModified": 1}
+    )
 
-    return {
-        'participating': user['participation'],
-        'modified': has_lastmodified_tmstmp(user)
+    def format_participation(user):
+        return {
+            "participating": user["participation"],
+            "modified": has_lastmodified_tmstmp(user),
         }
 
-def update_participation(body, participant_id: uuid):  # noqa: E501
+    return eval_or_404(user, format_participation)
+
+
+def update_participation(body, participant_id: uuid):
     """Update a participation"""
 
     status_code = 500
 
-    if connexion.request.is_json:
-        body = Participation.from_dict(connexion.request.get_json())  # noqa: E501
+    if "participating" in body:
 
-        if body.participating is not None:
+        if last_update := app.mongo.users.find_one(
+            {"id": str(participant_id)}, {"lastModified": 1}
+        ):
 
-            last_update = app.mongo.db.users.find_one_or_404({'id': str(participant_id)}, {'lastModified': 1})
-
-            if has_lastmodified_tmstmp(last_update) and (datetime.datetime.utcnow() - last_update['lastModified'] <= datetime.timedelta(seconds=5)):
+            if has_lastmodified_tmstmp(last_update) and datetime.now(
+                timezone.utc
+            ) - pytz.UTC.localize(last_update["lastModified"]) <= timedelta(seconds=5):
                 status_code = 429
             else:
-
-                update_result = app.mongo.db.users.update_one(
-                    {'id': str(participant_id),}, 
-                    {'$set': {'participation': body.participating}})
+                participating = body["participating"]
+                update_result = app.mongo.users.update_one(
+                    {
+                        "id": str(participant_id),
+                    },
+                    {"$set": {"participation": participating}},
+                )
 
                 if update_result.modified_count == 1:
-                    send_update(participant_id, body.participating)
-
+                    send_update(participant_id, participating)
                 status_code = 204
         else:
-            status_code = 400
+            return problem_404()
+    else:
+        return BadRequestProblem("Malformed payload")
 
-    update_result = app.mongo.db.users.update_one(
-        {'id': str(participant_id)}, 
-        {'$currentDate': { "lastModified": True }})
-            
+    update_result = app.mongo.users.update_one(
+        {"id": str(participant_id)}, {"$currentDate": {"lastModified": True}}
+    )
+
     return None, status_code
