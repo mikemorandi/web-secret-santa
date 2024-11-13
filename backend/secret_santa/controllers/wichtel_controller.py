@@ -3,10 +3,13 @@ from connexion.exceptions import BadRequestProblem
 
 import uuid
 import pytz
+import logging
 from datetime import datetime, timezone, timedelta
 from flask import jsonify, current_app as app
 
 from .mail_controller import send_update
+
+logger = logging.getLogger(__name__)
 
 
 def has_lastmodified_tmstmp(db_obj) -> bool:
@@ -73,7 +76,7 @@ def get_draw(participant_id: uuid):
 def get_participation(participant_id: uuid):
     """Returns the participation status"""
 
-    print(participant_id)
+    logger.info(participant_id)
     user = app.mongo.users.find_one(
         {"id": str(participant_id)}, {"participation": 1, "lastModified": 1}
     )

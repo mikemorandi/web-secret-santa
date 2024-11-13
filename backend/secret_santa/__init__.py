@@ -18,17 +18,21 @@ logging.basicConfig(level=logging.INFO)
 app = FlaskApp(__name__, specification_dir="./openapi/")
 app.add_api("openapi.yaml", arguments={"title": "Wichtel API"}, pythonic_params=True)
 
-# DB
-connection_string = (
-    os.getenv("MONGO_URI")
-    .replace("{USER}", os.getenv("MONGO_USER"))
-    .replace("{PWD}", os.getenv("MONGO_PWD"))
-)
+if os.getenv("MONGO_URI") and os.getenv("MONGO_USER") and os.getenv("MONGO_PWD"):
 
-logger.info(print(os.getenv("MONGO_URI")))
+    # DB
+    connection_string = (
+        os.getenv("MONGO_URI")
+        .replace("{USER}", os.getenv("MONGO_USER"))
+        .replace("{PWD}", os.getenv("MONGO_PWD"))
+    )
 
-app.app.mongo_client = MongoClient(connection_string, tlsCAFile=certifi.where())
-app.app.mongo = app.app.mongo_client.secretsanta
+    logger.info(os.getenv("MONGO_URI"))
+
+    app.app.mongo_client = MongoClient(connection_string, tlsCAFile=certifi.where())
+    app.app.mongo = app.app.mongo_client.secretsanta
+else:
+    logger.error("Database configuration not present")
 
 # Mail
 app.app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
@@ -48,19 +52,21 @@ if app.app.config["MAIL_DEBUG_MAIL_ADRESS"]:
 scheduler = APScheduler()
 scheduler.init_app(app.app)
 
-settings = app.app.mongo.settings.find_one()
-if settings:
+if hasattr(app.app, "mongo"):
+    settings = app.app.mongo.settings.find_one()
+    if settings:
 
-    logger.info("Scheduling draw for {}".format(settings["drawing_time"]))
+        logger.info("Scheduling draw for {}".format(settings["drawing_time"]))
 
-    @scheduler.task("date", run_date=settings["drawing_time"])
-    # @scheduler.task("date", run_date=(datetime.now() + timedelta(seconds=5)))
-    def draw_assignments_job():
-        with app.app.app_context():
-            try:
-                draw_assignments()
-            except Exception as e:
-                logging.error("The drawing failed: {:s}".format(str(e)))
+        @scheduler.task("date", run_date=settings["drawing_time"])
+        # @scheduler.task("date", run_date=(datetime.now() + timedelta(seconds=5)))
+        def draw_assignments_job():
+            with app.app.app_context():
+                try:
+                    draw_assignments()
+                except Exception as e:
+                    logging.error("The drawing failed: {:s}".format(str(e)))
 
-
-scheduler.start()
+    scheduler.start()
+else:
+    logger.error("Scheduler not started")

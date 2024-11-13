@@ -43,14 +43,14 @@ def send_update(participant_id: uuid, participating: bool):
             app.mail.send(msg)
             logger.info(
                 "Sent participation update mail to: {:s}, uuid={:s}".format(
-                    user["email"], str(participant_id)
+                    recipient, str(participant_id)
                 )
             )
         except Exception as e:
-            print(e)
+            logger.error(e)
             logger.info(
                 "Could not send participation update mail to: {:s}, uuid={:s}".format(
-                    user["email"], str(participant_id)
+                    recipient, str(participant_id)
                 )
             )
     else:

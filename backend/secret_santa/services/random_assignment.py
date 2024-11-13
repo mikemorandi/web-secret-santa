@@ -110,4 +110,4 @@ if __name__ == "__main__":
 
     if solution:
         for key, value in solution.items():
-            print("{:s} -> {:s}".format(candidates[key], candidates[value]))
+            logger.info("{:s} -> {:s}".format(candidates[key], candidates[value]))
