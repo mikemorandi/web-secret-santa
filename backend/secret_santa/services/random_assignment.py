@@ -20,8 +20,15 @@ class RandomAssignmentDrawing:
         self.assignments = dict()
 
     def apply_preassignments(self):
+
         if self.pre_assignments:
             for assigment in self.pre_assignments:
+                assert (
+                    assigment[0] in self.candidates
+                ), f"pre-asassigned user {assigment[0]} is not among participants"
+                assert (
+                    assigment[1] in self.candidates
+                ), f"pre-asassigned user {assigment[1]} is not among participants"
                 assert assigment[0] not in self.assignments
                 self.assignments[assigment[0]] = assigment[1]
 
