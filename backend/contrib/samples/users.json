@@ -1,0 +1,74 @@
+[
+    {
+      "id": "e29f4357-af81-4c5a-a741-b33cd0fa86e6",
+      "firstName": "Emma",
+      "lastName": "Johnson",
+      "email": "emma.johnson@example.com",
+      "participation": true,
+      "lastModified": {"$date": "2025-04-03T12:00:00.000Z"},
+      "exclusions": ["7d8a3f1b-2c9e-48d7-b85e-61a0c3b48ef9"]
+    },
+    {
+      "id": "7d8a3f1b-2c9e-48d7-b85e-61a0c3b48ef9",
+      "firstName": "Bob",
+      "lastName": "Johnson",
+      "email": "michael.johnson@example.com",
+      "participation": true,
+      "lastModified": {"$date": "2025-04-03T12:05:00.000Z"},
+      "exclusions": ["e29f4357-af81-4c5a-a741-b33cd0fa86e6"]
+    },
+    {
+      "id": "b2f41c10-8a7d-4e91-a9c5-fb23d18b4297",
+      "firstName": "Sophia",
+      "lastName": "Williams",
+      "email": "sophia.williams@example.com",
+      "participation": true,
+      "lastModified": {"$date": "2025-04-03T12:10:00.000Z"},
+      "exclusions": ["5e9a12c4-8b3f-4721-9d6e-cb876a432501"]
+    },
+    {
+      "id": "5e9a12c4-8b3f-4721-9d6e-cb876a432501",
+      "firstName": "William",
+      "lastName": "Williams",
+      "email": "william.williams@example.com",
+      "participation": true,
+      "lastModified": {"$date": "2025-04-03T12:15:00.000Z"},
+      "exclusions": ["b2f41c10-8a7d-4e91-a9c5-fb23d18b4297"]
+    },
+    {
+      "id": "a3e71f82-c6d9-4b58-a38f-7e918f294c2d",
+      "firstName": "Olivia",
+      "lastName": "Brown",
+      "email": "olivia.brown@example.com",
+      "participation": true,
+      "lastModified": {"$date": "2025-04-03T12:20:00.000Z"},
+      "exclusions": []
+    },
+    {
+      "id": "d12b45e7-9c8a-47b2-8e7f-3a1d5c98e6b4",
+      "firstName": "James",
+      "lastName": "Davies",
+      "email": "james.davies@example.com",
+      "participation": true,
+      "lastModified": {"$date": "2025-04-03T12:25:00.000Z"},
+      "exclusions": []
+    },
+    {
+      "id": "f9c67e82-4a3b-51d9-8e2f-7c91b5a04e3d",
+      "firstName": "Charlotte",
+      "lastName": "Smith",
+      "email": "charlotte.smith@example.com",
+      "participation": false,
+      "lastModified": {"$date": "2025-04-03T12:30:00.000Z"},
+      "exclusions": []
+    },
+    {
+      "id": "8b4f2c9a-1e7d-46f3-9a5c-8d3e7b21f94c",
+      "firstName": "Henry",
+      "lastName": "Miller",
+      "email": "henry.miller@example.com",
+      "participation": true,
+      "lastModified": {"$date": "2025-04-03T12:35:00.000Z"},
+      "exclusions": []
+    }
+  ]

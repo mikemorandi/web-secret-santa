@@ -1,0 +1,7 @@
+[
+    {
+      "retry_sec": 5,
+      "drawing_time": {"$date": "2025-12-24T10:00:00.000Z"},
+      "assignment_hint": "Der Wert des Geschenk sollte CHF 50.- nicht übersteigen."
+    }
+  ]

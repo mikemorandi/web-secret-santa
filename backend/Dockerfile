@@ -1,20 +1,26 @@
-FROM python:3-alpine
+FROM node:20-alpine AS build
 
-RUN apk add --no-cache tzdata
-ENV TZ=Europe/Zurich
+WORKDIR /app
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
+COPY package*.json ./
 
-COPY requirements.txt /usr/src/app/
+RUN npm ci
 
-RUN pip3 install --no-cache-dir -r requirements.txt
+COPY . .
 
+RUN npm run build
 
-COPY secret_santa ./secret_santa
-COPY requirements.txt ./
-COPY contrib/start.sh ./
+FROM node:20-alpine
 
-EXPOSE 8000
+WORKDIR /app
 
-ENTRYPOINT ["/bin/sh", "./start.sh"]
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/src/modules/mail/templates ./dist/modules/mail/templates
+
+ENV NODE_ENV=production
+
+EXPOSE 3000
+
+CMD ["node", "dist/main.js"]

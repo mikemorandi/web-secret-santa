@@ -1,0 +1,44 @@
+doctype html
+html
+  head
+    meta(name="viewport", content="width=device-width")
+    meta(http-equiv="Content-Type", content="text/html; charset=UTF-8")
+    title Wichtel Auslosung
+    style.
+      body {
+        font-family: sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+        margin: 0;
+        padding: 0;
+        -ms-text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+      }
+      .container {
+        max-width: 580px;
+        margin: 0 auto;
+        padding: 10px;
+      }
+      .content {
+        box-sizing: border-box;
+        display: block;
+        margin: 0 auto;
+        max-width: 580px;
+        padding: 10px;
+      }
+      .highlight {
+        font-weight: bold;
+      }
+  body
+    div.container
+      div.content
+        h1 Hallo #{firstName}!
+
+        p Für dich wurde ausgelost:
+        p.highlight #{doneeName}
+        
+        if assignmentHint && assignmentHint.length > 0
+          p #{assignmentHint}
+        
+        p Viele Grüsse,
+        p Das Wichtel-Team
