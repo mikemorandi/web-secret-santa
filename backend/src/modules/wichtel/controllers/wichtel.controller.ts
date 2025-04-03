@@ -55,6 +55,7 @@ export class WichtelController {
   @ApiResponse({ status: 204, description: 'Participant updated' })
   @ApiResponse({ status: 400, description: 'Invalid request' })
   @ApiResponse({ status: 404, description: 'Participant not found' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateParticipation(
     @Param('participantId') participantId: string,

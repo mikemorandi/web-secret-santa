@@ -88,7 +88,7 @@ let WichtelService = WichtelService_1 = class WichtelService {
         }
         if (user.lastModified &&
             Date.now() - user.lastModified.getTime() <= 5000) {
-            throw new common_1.BadRequestException('Too many requests, please wait before updating again');
+            throw new common_1.HttpException('Too many requests, please wait before updating again', common_1.HttpStatus.TOO_MANY_REQUESTS);
         }
         const statusChanged = user.participation !== participationDto.participating;
         this.logger.log(`Updating participation for user ${participantId}: ${user.participation} -> ${participationDto.participating}, changed: ${statusChanged}`);

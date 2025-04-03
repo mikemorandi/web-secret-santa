@@ -1,11 +1,11 @@
 <template>
   <div class="container">
-    <div class="jumbotron" v-if="user !== null && assignment != null">
-      <h1 class="display-4">Hallo {{user.firstName}}</h1>
+    <div v-if="user !== null && assignment != null" class="jumbotron">
+      <h1 class="display-4">Hallo {{ user.firstName }}</h1>
       <hr class="my-4">
-      <p class="lead">Für dich wurde <strong>{{assignment.firstName}}</strong> ausgelost</p>
+      <p class="lead">Für dich wurde <strong>{{ assignment.firstName }}</strong> ausgelost</p>
     </div>
-    <div class="jumbotron" v-if="user == null || assignment == null">
+    <div v-if="user == null || assignment == null" class="jumbotron">
       <h1 class="display-4">Fehler</h1>
       <hr class="my-4">
       <p class="lead">Du wurdest noch nicht ausgelost</p>
@@ -13,57 +13,64 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import axios from 'axios'
-import User from '../model/user'
 import { API_BASEPATH } from '../components/config'
 
 axios.defaults.headers.put['Content-Type'] = 'application/json'
 
-export default {
-  name: 'Assignment-',
-  data () {
+export default defineComponent({
+  name: 'AssignmentPage',
+  setup () {
+    const route = useRoute()
+    const user = ref(null)
+    const userId = ref<string | null>(null)
+    const assignment = ref(null)
+    const errorMessage = ref(null)
+    const basepath = API_BASEPATH
+
+    const setUserId = (id: string) => {
+      userId.value = id
+      fetchUserDetails()
+      fetchAssignment()
+    }
+
+    const fetchUserDetails = () => {
+      axios.get(`${basepath}/api/v1/users/${userId.value}`)
+        .then(response => {
+          user.value = response.data
+        })
+        .catch(() => {
+          user.value = null
+        })
+    }
+
+    const fetchAssignment = () => {
+      axios.get(`${basepath}/api/v1/assignments/${userId.value}`)
+        .then(response => {
+          assignment.value = response.data
+        })
+        .catch(() => {
+          user.value = null
+        })
+    }
+
+    watch(() => route.params.userId, (newId) => {
+      setUserId(newId as string)
+    })
+
+    onMounted(() => {
+      setUserId(route.params.userId as string)
+    })
+
     return {
-      user: null,
-      userId: null,
-      assignment: null,
-      errorMessage: null,
-      basepath: API_BASEPATH
-    }
-  },
-  watch: {
-    $route (to, from) {
-      this.setUserId(to.params.userId)
-    }
-  },
-  mounted () {
-    this.setUserId(this.$route.params.userId)
-  },
-  methods: {
-    setUserId (userId) {
-      this.userId = userId
-      this.fetchUserDetails()
-      this.fetchAssignment()
-    },
-    fetchUserDetails () {
-      axios.get(`${this.basepath}/api/v1/users/${this.userId}`)
-        .then(response => {
-          this.user = response.data
-        })
-        .catch(e => {
-          this.user = null
-        })
-    },
-    fetchAssignment () {
-      axios.get(`${this.basepath}/api/v1/assignments/${this.userId}`)
-        .then(response => {
-          this.assignment = response.data
-        })
-        .catch(e => {
-          this.user = null
-        })
+      user,
+      userId,
+      assignment,
+      errorMessage
     }
   }
-}
-
+})
 </script>

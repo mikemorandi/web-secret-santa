@@ -1,1 +1,1 @@
-export const API_BASEPATH: string = '$VUE_APP_API_BASEPATH'
+export const API_BASEPATH = process.env.VUE_APP_API_BASEPATH

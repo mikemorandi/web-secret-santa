@@ -131,6 +131,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 204, description: 'Participant updated' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid request' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Participant not found' }),
+    (0, swagger_1.ApiResponse)({ status: 429, description: 'Too many requests' }),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
     __param(0, (0, common_1.Param)('participantId')),
     __param(1, (0, common_1.Body)()),

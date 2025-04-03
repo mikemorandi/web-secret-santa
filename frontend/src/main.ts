@@ -1,10 +1,18 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
+import { BootstrapVueNext } from 'bootstrap-vue-next'
+import 'bootstrap/dist/css/bootstrap.css'
+import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
+import moment from 'moment'
+import { API_BASEPATH } from './components/config'
 
-Vue.config.productionTip = false
+console.log('API_BASEPATH:', API_BASEPATH)
 
-new Vue({
-  router,
-  render: h => h(App)
-}).$mount('#app')
+const app = createApp(App)
+
+app.use(router)
+app.use(BootstrapVueNext)
+app.config.globalProperties.$moment = moment
+
+app.mount('#app')

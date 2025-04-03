@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from '../entities/user.entity';
@@ -118,7 +118,7 @@ export class WichtelService {
       user.lastModified &&
       Date.now() - user.lastModified.getTime() <= 5000
     ) {
-      throw new BadRequestException('Too many requests, please wait before updating again');
+      throw new HttpException('Too many requests, please wait before updating again', HttpStatus.TOO_MANY_REQUESTS);
     }
     
     const statusChanged = user.participation !== participationDto.participating;    

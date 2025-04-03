@@ -3,24 +3,31 @@
     <h1 class="display-4">Wichteln</h1>
     <p class="lead">Hallo! Gib bitte deine Wichtel-ID ein, die du per E-Mail erhalten hast.</p>
     <hr class="my-4">
-    <b-form-input v-model="id" placeholder="deine Wichtel-ID"></b-form-input>
-    <b-button v-on:click="showDetails">Weiter</b-button>
+    <div class="d-flex">
+      <b-form-input v-model="id" placeholder="deine Wichtel-ID" class="me-3"></b-form-input>
+      <b-button variant="primary" @click="showDetails">Weiter</b-button>
+    </div>
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-export default {
-  name: 'home',
-  data () {
-    return {
-      id: ''
+export default defineComponent({
+  name: 'HomePage',
+  setup () {
+    const id = ref('')
+    const router = useRouter()
+
+    const showDetails = () => {
+      router.push({ name: 'register', params: { userId: id.value } })
     }
-  },
-  methods: {
-    showDetails: function (event) {
-      this.$router.push({ name: 'register', params: { userId: this.id } })
+
+    return {
+      id,
+      showDetails
     }
   }
-}
+})
 </script>
