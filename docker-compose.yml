@@ -1,19 +1,21 @@
-version: '3.2'
 services:
-  wichtelweb:
-    image: "webwichtel:latest"
+  frontend:
+    image: "secretsanta-ui:latest"
     restart: always
     ports:
-      - "8082:80"
+      - "80:80"
     environment:
       - VUE_APP_API_BASEPATH=https://wichteln.mydomain.org
   secretsanta:
-    image: "secretsanta:latest"
+    depends_on:
+      - backend
+  backend:
+    image: "secretsanta-api:latest"
     restart: always
     ports:
-      - "8081:8080"
+      - "8080:3000"
     environment:
-      - MONGO_URI=mongodb://mongodb:27017/secretsanta
+      - MONGODB_URI=mongodb://mongodb:27017/secretsanta
       - MAIL_SERVER=smtp.mail.net
       - MAIL_PORT=587
       - MAIL_USE_TLS=True

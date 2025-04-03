@@ -1,18 +1,12 @@
 #!/bin/sh
 
-# Replace env vars in JavaScript files
-echo "Replacing env vars in JS"
-for file in /usr/share/nginx/html/js/*.js;
-do
-  echo "Processing $file ...";
+# Create a JS file with environment variables
+echo "Generating runtime config with environment variables"
+mkdir -p /usr/share/nginx/html/config
 
-  # Use the existing JS file as template
-  if [ ! -f $file.tmpl.js ]; then
-    cp $file $file.tmpl.js
-  fi
-
-  envsubst '$VUE_APP_API_BASEPATH' < $file.tmpl.js > $file
-done
+cat > /usr/share/nginx/html/config/runtime-config.js << EOF
+window.VUE_APP_API_BASEPATH = "${VUE_APP_API_BASEPATH}";
+EOF
 
 echo "Starting Nginx"
 nginx -g 'daemon off;'

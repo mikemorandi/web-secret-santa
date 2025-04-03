@@ -7,6 +7,7 @@ import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
 import moment from 'moment'
 import { API_BASEPATH } from './components/config'
 
+// eslint-disable-next-line no-console
 console.log('API_BASEPATH:', API_BASEPATH)
 
 const app = createApp(App)

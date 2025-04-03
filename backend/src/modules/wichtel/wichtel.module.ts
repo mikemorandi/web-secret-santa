@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ScheduleModule } from '@nestjs/schedule';
 import { WichtelController } from './controllers/wichtel.controller';
 import { WichtelService } from './services/wichtel.service';
 import { DrawingService } from './services/drawing.service';
@@ -20,7 +19,6 @@ import { MailModule } from '../mail/mail.module';
       { name: PreAssignment.name, schema: PreAssignmentSchema },
       { name: Settings.name, schema: SettingsSchema },
     ]),
-    ScheduleModule.forRoot(),
     MailModule,
   ],
   controllers: [WichtelController],
