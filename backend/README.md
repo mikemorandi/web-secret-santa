@@ -1,4 +1,4 @@
-# Secret Santa (Wichtel) Backend - NestJS Version
+# Secret Santa Backend
 
 The application facilitates a Secret Santa gift exchange by managing participants, their participation status, and randomly assigning gift recipients.
 
@@ -12,7 +12,7 @@ The application facilitates a Secret Santa gift exchange by managing participant
 
 ## Technology Stack
 
-- NestJS - A progressive Node.js framework for building efficient, reliable, and scalable server-side applications
+- NestJS - A Node.js framework for building scalable server-side applications
 - TypeScript - Typed superset of JavaScript
 - MongoDB - NoSQL database
 - Mongoose - MongoDB object modeling for Node.js

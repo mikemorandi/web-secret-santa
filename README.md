@@ -1,6 +1,6 @@
-# Web Secret Santa (Wichtel)
+# Web Secret Santa
 
-A web application that facilitates organizing Secret Santa (Wichtel) gift exchanges. Participants can register, set preferences, and automatically get assigned to someone for gift-giving. The system handles notifications, exclusion rules, and pre-assignments.
+A web application that facilitates organizing Secret Santa gift exchanges. Participants can register, set preferences, and automatically get assigned to someone for gift-giving. The system handles notifications, exclusion rules, and pre-assignments.
 
 ## Features
 

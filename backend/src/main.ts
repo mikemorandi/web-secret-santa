@@ -12,9 +12,9 @@ async function bootstrap() {
   app.enableCors();
 
   const config = new DocumentBuilder()
-    .setTitle('Wichtel API')
+    .setTitle('SecretSanta API')
     .setVersion('1.0.0')
-    .addTag('wichtel')
+    .addTag('secret-santa')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

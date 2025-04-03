@@ -1,4 +1,4 @@
-# wichtel
+# Secret Santa UI
 
 ## Project setup
 ```
