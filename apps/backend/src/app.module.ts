@@ -16,6 +16,7 @@ function maskMongoDBUri(uri: string): string {
   try {
     const parsedUrl = new URL(uri);
     if (parsedUrl.username) {
+      parsedUrl.username = '********';
       parsedUrl.password = '********';
       return parsedUrl.toString();
     }

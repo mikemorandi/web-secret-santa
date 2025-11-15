@@ -7,7 +7,7 @@ import { ParticipantDetailsDto } from '../dto/participant-details.dto';
 import { ParticipationDto, ParticipationResponseDto } from '../dto/participation.dto';
 import { SettingsDto } from '../dto/settings.dto';
 
-@ApiTags('seceret-santa')
+@ApiTags('secret-santa')
 @Controller()
 export class WichtelController {
   constructor(

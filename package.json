@@ -1,0 +1,34 @@
+{
+  "name": "web-secret-santa-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Secret Santa application monorepo with NestJS backend and Vue.js frontend",
+  "scripts": {
+    "dev": "pnpm --parallel --stream -r dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "backend:dev": "pnpm --filter backend dev",
+    "backend:build": "pnpm --filter backend build",
+    "backend:start": "pnpm --filter backend start",
+    "frontend:dev": "pnpm --filter frontend dev",
+    "frontend:build": "pnpm --filter frontend build",
+    "frontend:serve": "pnpm --filter frontend serve"
+  },
+  "keywords": [
+    "secret-santa",
+    "monorepo",
+    "nestjs",
+    "vue"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.8",
+    "bootstrap-vue-next": "^0.40.7"
+  }
+}

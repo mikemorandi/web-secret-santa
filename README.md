@@ -35,28 +35,86 @@ A web application that facilitates organizing Secret Santa gift exchanges. Parti
 
 ## Project Structure
 
+This is a **pnpm monorepo** containing both frontend and backend applications:
+
 ```
 web-secret-santa/
-├── backend/            # NestJS backend application
-│   └── ...
-├── frontend/           # Vue.js frontend application
-│   └── ...
-└── docker-compose.yml  # Docker Compose configuration
+├── apps/
+│   ├── backend/            # NestJS backend application
+│   │   └── ...
+│   └── frontend/           # Vue.js frontend application
+│       └── ...
+├── docker-compose.yml      # Docker Compose configuration
+├── pnpm-workspace.yaml     # pnpm workspace configuration
+└── package.json            # Root package.json with workspace scripts
 ```
 
-## Setup and Deployment
+## Prerequisites
+
+- **Node.js** >= 18.0.0
+- **pnpm** >= 8.0.0 (Install with: `npm install -g pnpm`)
+
+## Setup and Development
+
+### Initial Setup
 
 1. Clone the repository
-2. Configure environment variables in:
-   - `frontend/.env.development` and `frontend/.env.production`
+2. Install dependencies for all packages:
+   ```bash
+   pnpm install
+   ```
+
+3. Configure environment variables:
+   - `apps/frontend/.env.development` and `apps/frontend/.env.production`
    - Backend environment variables via Docker Compose
 
-3. Build and run with Docker Compose:
-   ```
-   docker-compose up -d
-   ```
+### Development
 
-4. Or run each component separately:
-   - Frontend: `cd frontend && npm install && npm run serve`
-   - Backend: `cd backend && npm install && npm run start:dev`
-   - MongoDB: Run locally or via Docker
+Run all applications in development mode:
+```bash
+pnpm dev
+```
+
+Or run individual applications:
+```bash
+# Backend only
+pnpm backend:dev
+
+# Frontend only
+pnpm frontend:dev
+```
+
+### Building
+
+Build all applications:
+```bash
+pnpm build
+```
+
+Or build individually:
+```bash
+# Backend
+pnpm backend:build
+
+# Frontend
+pnpm frontend:build
+```
+
+### Testing & Linting
+
+```bash
+# Run tests across all packages
+pnpm test
+
+# Run linting across all packages
+pnpm lint
+```
+
+## Docker Deployment
+
+Build and run with Docker Compose:
+```bash
+docker-compose up -d
+```
+
+This will build both frontend and backend from the monorepo structure.

@@ -1,16 +1,32 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# Dependencies
+**/node_modules/
+**/dist/
+**/build/
 
-# C extensions
-*.so
+# pnpm
+.pnpm-store/
+.pnpm-debug.log*
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
-# Unit test / coverage reports
+# OS
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+**.vscode
+
+# Testing
+coverage/
+*.lcov
+.nyc_output
 htmlcov/
 .tox/
 .coverage
@@ -20,22 +36,44 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
-venv/
 
-# Translations
+# Environment
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+dist/
+dist-ssr/
+*.local
+.output/
+.nuxt/
+.next/
+
+# Database
+wichtel-db
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+.temp/
+
+# TypeScript
+*.tsbuildinfo
+
+# Old Python artifacts (if any remain)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
 *.mo
 *.pot
-
-# Django stuff:
-*.log
-
-# Sphinx documentation
+pip-log.txt
+pip-delete-this-directory.txt
 docs/_build/
-
-# PyBuilder
 target/
-
-**/node_modules/
-**.vscode
-
-wichtel-db

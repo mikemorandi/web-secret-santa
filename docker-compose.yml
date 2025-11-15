@@ -1,5 +1,8 @@
 services:
   frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
     image: "secretsanta-ui:latest"
     restart: always
     ports:
@@ -10,6 +13,9 @@ services:
     depends_on:
       - backend
   backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
     image: "secretsanta-api:latest"
     restart: always
     ports:

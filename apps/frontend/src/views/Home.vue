@@ -4,8 +4,8 @@
     <p class="lead">Hallo! Gib bitte deine Wichtel-ID ein, die du per E-Mail erhalten hast.</p>
     <hr class="my-4">
     <div class="d-flex">
-      <b-form-input v-model="id" placeholder="deine Wichtel-ID" class="me-3"></b-form-input>
-      <b-button variant="primary" @click="showDetails">Weiter</b-button>
+      <BFormInput v-model="id" placeholder="deine Wichtel-ID" class="me-3"></BFormInput>
+      <BButton variant="primary" @click="showDetails">Weiter</BButton>
     </div>
   </div>
 </template>
@@ -13,9 +13,14 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { BFormInput, BButton } from 'bootstrap-vue-next'
 
 export default defineComponent({
   name: 'HomePage',
+  components: {
+    BFormInput,
+    BButton
+  },
   setup () {
     const id = ref('')
     const router = useRouter()

@@ -1,15 +1,11 @@
 <template>
   <div class="container">
-    <b-alert dismissible fade :show="errorMessage" variant="danger" @dismissed="errorMessage = null">{{ errorMessage }}</b-alert>
-    <b-alert :show="throttlingAlert.dismissCountDown" dismissible fade variant="warning" @dismissed="onAlertDismissed" @dismiss-count-down="countDownChanged">
-      <p>Du hast deine Meinung zu schnell geändert, bitte warte {{ throttlingAlert.dismissCountDown }} Sekunden...</p>
-      <b-progress variant="warning" :max="throttlingAlert.dismissSecs" :value="throttlingAlert.dismissCountDown" height="4px"></b-progress>
-    </b-alert>
-    
+    <BAlert dismissible fade :show="errorMessage" variant="danger" @dismissed="errorMessage = null">{{ errorMessage }}</BAlert>
+
     <div v-if="showToast" class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
       <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="toast-header bg-warning text-dark">
-          <strong class="me-auto">Zu schnell!</strong>
+          <strong class="me-auto">Zu schnell</strong>
           <button @click="showToast = false" type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
@@ -31,11 +27,13 @@
       </p>
       <p v-if="user == null" class="lead">Da lief was schief. Deine ID ist uns unbekannt</p>
       <hr class="my-4">
-      <b-button
-v-if="user !== null" :disabled="throttlingAlert.dismissCountDown > 0" :class="{ 'btn-success': !participating, 'btn-secondary': participating }"
+      <BButton
+        v-if="user !== null"
+        :disabled="throttlingAlert.dismissCountDown > 0"
+        :variant="participating ? 'secondary' : 'success'"
         @click="toggleParticipation">
         {{ participating ? 'Nein, ich mache nicht mehr mit' : 'Ja, ich mache mit' }}
-      </b-button>
+      </BButton>
     </div>
   </div>
 </template>
@@ -46,11 +44,16 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import moment from 'moment'
 import { API_BASEPATH } from '../components/config'
+import { BButton, BAlert } from 'bootstrap-vue-next'
 
 axios.defaults.headers.put['Content-Type'] = 'application/json'
 
 export default defineComponent({
   name: 'RegisterPage',
+  components: {
+    BButton,
+    BAlert
+  },
   setup () {
     const route = useRoute()
     const router = useRouter()
@@ -116,7 +119,7 @@ export default defineComponent({
               : 5
               
             // Show toast without disabling button
-            toastMessage.value = 'Du hast zu schnell geklickt. Bitte warte kurz.'
+            toastMessage.value = 'Du hast deine Meinung zu schnell geändert, bitte warte ein paar Sekunden... '
             showToast.value = true
             
             // Auto-hide toast after 5 seconds
