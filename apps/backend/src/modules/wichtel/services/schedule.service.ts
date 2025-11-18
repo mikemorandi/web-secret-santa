@@ -5,6 +5,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { CronJob } from 'cron';
 import { Settings } from '../entities/settings.entity';
 import { DrawingService } from './drawing.service';
+import { TimezoneUtil } from '../../../shared/utils/timezone.util';
 
 @Injectable()
 export class ScheduleService implements OnModuleInit {
@@ -45,38 +46,40 @@ export class ScheduleService implements OnModuleInit {
    */
   async logScheduledDrawingTime(): Promise<void> {
     try {
-      // Fetch settings with explicit projection to ensure we get drawing_time
+      // Fetch settings with explicit projection to ensure we get drawing_time and timezone
       const settings = await this.settingsModel.findOne({}, {
         drawing_time: 1,
-        retry_sec: 1
+        retry_sec: 1,
+        timezone: 1
       }).exec();
-      
+
       if (!settings) {
         this.logger.warn('No settings document found in the database');
         return;
       }
-      
+
       if (!settings.drawing_time) {
         this.logger.warn('Settings exist but drawing_time is not set');
-        
-        // Try to fix it
+
+        // Try to fix it - set to December 1st at 12:00 (noon)
         const currentYear = new Date().getFullYear();
-        const newDrawingTime = new Date(`${currentYear}-12-24T10:00:00.000Z`);
-        
+        const newDrawingTime = new Date(`${currentYear}-12-01T12:00:00.000Z`);
+
         await this.settingsModel.updateOne(
           { _id: settings._id },
           { $set: { drawing_time: newDrawingTime } }
         ).exec();
-        
-        this.logger.log(`Automatically fixed drawing time to: ${this.formatDate(newDrawingTime)}`);
+
+        this.logger.log(`Automatically fixed drawing time to: ${this.formatDate(newDrawingTime, settings.timezone)}`);
         return;
       }
 
       const drawingTime = new Date(settings.drawing_time);
       const now = new Date();
-      
+      const timezone = settings.timezone || 'UTC';
+
       // Format the drawing time in a readable format
-      const formattedDrawingTime = this.formatDate(drawingTime);
+      const formattedDrawingTime = this.formatDate(drawingTime, timezone);
       
       // Calculate time difference
       const timeDiff = drawingTime.getTime() - now.getTime();
@@ -98,16 +101,19 @@ export class ScheduleService implements OnModuleInit {
   }
 
   /**
-   * Format a date as DD.MM.YYYY HH:MM
+   * Format a date in the configured timezone
    */
-  private formatDate(date: Date): string {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    
-    return `${day}.${month}.${year} ${hours}:${minutes}`;
+  private formatDate(date: Date, timezone: string = 'UTC'): string {
+    return TimezoneUtil.formatDate(date, timezone);
+  }
+
+  /**
+   * Called when drawing time is updated via admin panel
+   * Logs the new scheduled time immediately
+   */
+  async onDrawingTimeUpdated(): Promise<void> {
+    this.logger.log('Drawing time was updated, refreshing schedule information...');
+    await this.logScheduledDrawingTime();
   }
 
   /**
@@ -155,18 +161,18 @@ export class ScheduleService implements OnModuleInit {
         
         if (success) {
           this.logger.log('Drawing completed successfully');
-          
-          // Update drawing time to next year
-          const nextYear = drawingTime.getFullYear() + 1;
-          const newDrawingTime = new Date(drawingTime);
-          newDrawingTime.setFullYear(nextYear);
-          
+
+          // Update drawing time to December 1st of next year at 12:00 (noon)
+          const nextYear = new Date().getFullYear() + 1;
+          const newDrawingTime = new Date(`${nextYear}-12-01T12:00:00.000Z`);
+          const timezone = settings.timezone || 'UTC';
+
           await this.settingsModel.updateOne(
             {},
             { $set: { drawing_time: newDrawingTime } }
           ).exec();
-          
-          this.logger.log(`Updated drawing time to next year: ${this.formatDate(newDrawingTime)}`);
+
+          this.logger.log(`Updated drawing time to next year: ${this.formatDate(newDrawingTime, timezone)}`);
         } else {
           this.logger.log('Drawing was not performed (it might have already been done)');
         }

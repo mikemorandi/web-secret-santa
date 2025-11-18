@@ -19,41 +19,36 @@ export class DatabaseInitService {
     try {
       // First check if settings exist
       const settings = await this.settingsModel.findOne().exec();
-      
+
       if (!settings) {
         this.logger.log('Initializing settings collection');
-        
-        // Set default drawing time to Christmas Eve of current year
-        const currentYear = new Date().getFullYear();
-        const drawingTime = new Date(`${currentYear}-12-24T10:00:00.000Z`);
-        
-        // Format the date for logging
+
+        const drawingTime = this.getDefaultDrawingTime();
         const formattedDate = this.formatDate(drawingTime);
-        
-        // Create settings 
+
+        // Create settings
         const newSettings = await this.settingsModel.create({
           retry_sec: 5,
           drawing_time: drawingTime,
           assignment_hint: "Bitte denk daran, dass das Wichtelgeschenk nicht mehr als 50.- kosten sollte.",
+          timezone: 'UTC',
         });
-        
+
         this.logger.log(`Settings initialized successfully with drawing time: ${formattedDate}`);
         this.logger.log(`Created settings document with ID: ${newSettings._id}`);
       } else {
         // Check if drawing_time exists and is valid
         if (!settings.drawing_time || !(settings.drawing_time instanceof Date)) {
           this.logger.warn('Settings exist but drawing_time is missing or invalid, fixing it');
-          
-          // Set default drawing time to Christmas Eve of current year
-          const currentYear = new Date().getFullYear();
-          const drawingTime = new Date(`${currentYear}-12-24T10:00:00.000Z`);
-          
+
+          const drawingTime = this.getDefaultDrawingTime();
+
           // Update the settings
           await this.settingsModel.updateOne(
             { _id: settings._id },
             { $set: { drawing_time: drawingTime } }
           ).exec();
-          
+
           this.logger.log(`Drawing time updated to ${this.formatDate(drawingTime)}`);
         } else {
           this.logger.log(`Settings already exist with drawing time: ${this.formatDate(settings.drawing_time)}`);
@@ -62,6 +57,12 @@ export class DatabaseInitService {
     } catch (error) {
       this.logger.error(`Error initializing settings: ${error.message}`, error.stack);
     }
+  }
+
+  private getDefaultDrawingTime(): Date {
+    // Set default drawing time to December 1st of current year at 12:00 (noon) UTC
+    const currentYear = new Date().getFullYear();
+    return new Date(`${currentYear}-12-01T12:00:00.000Z`);
   }
   
   private formatDate(date: Date): string {

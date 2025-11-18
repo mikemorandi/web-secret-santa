@@ -8,14 +8,17 @@
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Admin Authentication</h5>
-            <form @submit.prevent="authenticate">
+            <form @submit.prevent="authenticate" name="admin-login">
+              <input type="hidden" name="username" value="admin" autocomplete="username" />
               <div class="mb-3">
                 <label for="password" class="form-label">Password</label>
                 <input
                   type="password"
                   class="form-control"
                   id="password"
+                  name="password"
                   v-model="password"
+                  autocomplete="current-password"
                   required
                 />
               </div>
@@ -66,9 +69,14 @@
       <div v-show="activeTab === 'users'">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h3>User Management</h3>
-          <button class="btn btn-success" @click="showCreateUserModal">
-            Create User
-          </button>
+          <div>
+            <button class="btn btn-primary me-2" @click="sendWelcomeEmailsToAll">
+              <i class="bi bi-envelope-fill"></i> Send Welcome to All
+            </button>
+            <button class="btn btn-success" @click="showCreateUserModal">
+              Create User
+            </button>
+          </div>
         </div>
 
         <div v-if="loadingUsers" class="text-center">
@@ -102,6 +110,9 @@
               </td>
               <td>{{ user.exclusions?.length || 0 }}</td>
               <td>
+                <button class="btn btn-sm btn-success me-2" @click="sendWelcomeEmail(user.id)" title="Send welcome email">
+                  <i class="bi bi-envelope"></i> Welcome
+                </button>
                 <button class="btn btn-sm btn-primary me-2" @click="editUser(user)">
                   Edit
                 </button>
@@ -155,6 +166,18 @@
             />
           </div>
 
+          <div class="mb-3">
+            <label for="timezone" class="form-label">Timezone</label>
+            <input
+              type="text"
+              class="form-control"
+              id="timezone"
+              v-model="settingsForm.timezone"
+              placeholder="UTC"
+            />
+            <small class="text-muted">IANA timezone identifier (e.g., UTC, Europe/Zurich, America/New_York)</small>
+          </div>
+
           <div v-if="settingsSuccess" class="alert alert-success">
             Settings updated successfully!
           </div>
@@ -168,7 +191,16 @@
 
       <!-- Drawings Tab -->
       <div v-show="activeTab === 'drawings'">
-        <h3 class="mb-3">Current Drawings</h3>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3>Current Drawings</h3>
+          <button
+            v-if="drawings.length > 0"
+            class="btn btn-danger"
+            @click="resetDrawings"
+          >
+            Reset Drawings
+          </button>
+        </div>
 
         <div v-if="loadingDrawings" class="text-center">
           <div class="spinner-border" role="status">
@@ -312,6 +344,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import axios from 'axios';
+import { Modal } from 'bootstrap';
 import { API_BASEPATH } from '@/components/config';
 
 interface User {
@@ -327,6 +360,7 @@ interface Settings {
   drawing_time: string;
   assignment_hint?: string;
   retry_sec: number;
+  timezone?: string;
 }
 
 interface Drawing {
@@ -372,6 +406,7 @@ export default defineComponent({
         drawing_time: '',
         assignment_hint: '',
         retry_sec: 5,
+        timezone: 'UTC',
       } as Settings,
       loadingSettings: false,
       settingsSuccess: false,
@@ -457,10 +492,11 @@ export default defineComponent({
         exclusions: [],
       };
       this.userError = '';
-      const modal = new (window as any).bootstrap.Modal(
-        document.getElementById('userModal')
-      );
-      modal.show();
+      const modalElement = document.getElementById('userModal');
+      if (modalElement) {
+        const modal = new Modal(modalElement);
+        modal.show();
+      }
     },
 
     editUser(user: User) {
@@ -473,10 +509,11 @@ export default defineComponent({
         exclusions: user.exclusions || [],
       };
       this.userError = '';
-      const modal = new (window as any).bootstrap.Modal(
-        document.getElementById('userModal')
-      );
-      modal.show();
+      const modalElement = document.getElementById('userModal');
+      if (modalElement) {
+        const modal = new Modal(modalElement);
+        modal.show();
+      }
     },
 
     async saveUser() {
@@ -500,15 +537,10 @@ export default defineComponent({
 
         // Close modal and reload users
         const modalElement = document.getElementById('userModal');
-        interface WindowWithBootstrap extends Window {
-          bootstrap?: {
-            Modal: {
-              getInstance: (element: HTMLElement | null) => { hide: () => void } | null;
-            };
-          };
+        if (modalElement) {
+          const modal = Modal.getInstance(modalElement);
+          modal?.hide();
         }
-        const modal = (window as WindowWithBootstrap).bootstrap!.Modal.getInstance(modalElement);
-        modal?.hide();
         await this.loadUsers();
       } catch (error) {
         const err = error as { response?: { data?: { message?: string } } };
@@ -529,6 +561,43 @@ export default defineComponent({
       } catch (error) {
         const err = error as { response?: { data?: { message?: string } }; message?: string };
         alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
+      }
+    },
+
+    async sendWelcomeEmail(userId: string) {
+      try {
+        await axios.post(
+          `${API_BASEPATH}/admin/users/${userId}/welcome-email`,
+          {},
+          {
+            headers: this.getAuthHeaders(),
+          }
+        );
+        alert('Welcome email sent successfully!');
+      } catch (error) {
+        const err = error as { response?: { data?: { message?: string } }; message?: string };
+        alert('Failed to send welcome email: ' + (err.response?.data?.message || err.message));
+      }
+    },
+
+    async sendWelcomeEmailsToAll() {
+      if (!confirm('Are you sure you want to send welcome emails to all users?')) {
+        return;
+      }
+
+      try {
+        const response = await axios.post(
+          `${API_BASEPATH}/admin/users/welcome-emails/all`,
+          {},
+          {
+            headers: this.getAuthHeaders(),
+          }
+        );
+        const data = response.data;
+        alert(`Welcome emails sent!\nSuccess: ${data.success}\nFailed: ${data.failed}\nTotal: ${data.total}`);
+      } catch (error) {
+        const err = error as { response?: { data?: { message?: string } }; message?: string };
+        alert('Failed to send welcome emails: ' + (err.response?.data?.message || err.message));
       }
     },
 
@@ -553,6 +622,7 @@ export default defineComponent({
           drawing_time: datetimeLocal,
           assignment_hint: settings.assignment_hint || '',
           retry_sec: settings.retry_sec || 5,
+          timezone: settings.timezone || 'UTC',
         };
       } catch (error) {
         // eslint-disable-next-line no-console
@@ -575,6 +645,7 @@ export default defineComponent({
             drawing_time: drawingTime.toISOString(),
             assignment_hint: this.settingsForm.assignment_hint,
             retry_sec: this.settingsForm.retry_sec,
+            timezone: this.settingsForm.timezone,
           },
           {
             headers: this.getAuthHeaders(),
@@ -604,6 +675,22 @@ export default defineComponent({
         console.error('Failed to load drawings:', error);
       } finally {
         this.loadingDrawings = false;
+      }
+    },
+
+    async resetDrawings() {
+      if (!confirm('Are you sure you want to reset all drawings? This will delete all current assignments and allow the drawing to be performed again.')) {
+        return;
+      }
+
+      try {
+        await axios.delete(`${API_BASEPATH}/admin/assignments`, {
+          headers: this.getAuthHeaders(),
+        });
+        await this.loadDrawings();
+      } catch (error) {
+        const err = error as { response?: { data?: { message?: string } }; message?: string };
+        alert('Failed to reset drawings: ' + (err.response?.data?.message || err.message));
       }
     },
   },

@@ -104,4 +104,36 @@ export class AdminController {
   async getAssignmentsWithDetails() {
     return this.adminService.getAssignmentsWithDetails();
   }
+
+  @Delete('assignments')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Reset all drawings (delete all assignments)' })
+  @ApiResponse({ status: 204, description: 'All assignments deleted successfully' })
+  async resetDrawings() {
+    await this.adminService.resetDrawings();
+  }
+
+  @Post('users/:id/welcome-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send welcome email to a user' })
+  @ApiResponse({ status: 200, description: 'Welcome email sent successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async sendWelcomeEmail(@Param('id') id: string) {
+    await this.adminService.sendWelcomeEmail(id);
+    return { message: 'Welcome email sent successfully' };
+  }
+
+  @Post('users/welcome-emails/all')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send welcome emails to all users' })
+  @ApiResponse({ status: 200, description: 'Welcome emails sent successfully' })
+  async sendWelcomeEmailsToAll() {
+    const result = await this.adminService.sendWelcomeEmailsToAll();
+    return {
+      message: 'Welcome emails sent',
+      success: result.success,
+      failed: result.failed,
+      total: result.total
+    };
+  }
 }

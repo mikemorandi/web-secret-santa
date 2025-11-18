@@ -7,6 +7,7 @@ import * as pug from 'pug';
 import * as path from 'path';
 import { User } from '../../wichtel/entities/user.entity';
 import { Settings } from '../../wichtel/entities/settings.entity';
+import { TimezoneUtil } from '../../../shared/utils/timezone.util';
 
 @Injectable()
 export class MailService {
@@ -67,15 +68,8 @@ export class MailService {
     return debugMailAddress || email;
   }
 
-  private formatDate(date: Date): string {
-    // Format as day.month.year hours:minutes (24h format, no timezone)
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    
-    return `${day}.${month}.${year} ${hours}:${minutes}`;
+  private formatDate(date: Date, timezone: string): string {
+    return TimezoneUtil.formatDate(date, timezone);
   }
 
   async sendUpdate(participantId: string, participating: boolean): Promise<void> {
@@ -110,8 +104,8 @@ export class MailService {
       const html = pug.renderFile(templatePath, {
         firstName: user.firstName,
         participating,
-        registerLink: `${this.configService.get<string>('PUBLIC_BASE_URL')}#/register/${participantId}`,
-        drawTime: this.formatDate(settings.drawing_time),
+        registerLink: `${this.configService.get<string>('PUBLIC_BASE_URL')}/register/${participantId}`,
+        drawTime: this.formatDate(settings.drawing_time, settings.timezone || 'UTC'),
       });
       
       await this.transporter.sendMail({
@@ -125,6 +119,53 @@ export class MailService {
       this.logger.log(`Sent participation update mail to: ${recipient}, uuid=${participantId}`);
     } catch (error) {
       this.logger.error(`Could not send participation update mail to participant ${participantId}`, error.stack);
+    }
+  }
+
+  async sendWelcomeEmail(participantId: string): Promise<void> {
+    try {
+      const user = await this.userModel.findOne(
+        { id: participantId },
+        { firstName: 1, email: 1 }
+      ).exec();
+
+      const settings = await this.settingsModel.findOne().exec();
+
+      if (!user || !settings) {
+        this.logger.error(`Query for participant ${participantId} failed`);
+        throw new Error('User or settings not found');
+      }
+
+      const subject = 'Willkommen zum Wichteln';
+      const recipient = this.getRecipientAddress(user.email);
+
+      // Fix the template path to work in both development and production
+      const templatePath = path.resolve(
+        process.cwd(),
+        process.env.NODE_ENV === 'production' ? 'dist' : 'src',
+        'modules/mail/templates/welcome_mail.pug'
+      );
+
+      this.logger.log(`Using template path: ${templatePath}`);
+
+      const html = pug.renderFile(templatePath, {
+        firstName: user.firstName,
+        registerLink: `${this.configService.get<string>('PUBLIC_BASE_URL')}/register/${participantId}`,
+        drawTime: this.formatDate(settings.drawing_time, settings.timezone || 'UTC'),
+      });
+
+      await this.transporter.sendMail({
+        from: this.configService.get<string>('MAIL_FROM'),
+        to: recipient,
+        subject,
+        text: subject,
+        html,
+      });
+
+      this.logger.log(`Sent welcome mail to: ${recipient}, uuid=${participantId}`);
+    } catch (error) {
+      this.logger.error(`Could not send welcome mail to participant ${participantId}`, error.stack);
+      throw error;
     }
   }
 

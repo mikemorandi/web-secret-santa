@@ -1,0 +1,59 @@
+doctype html
+html
+  head
+    meta(name="viewport", content="width=device-width")
+    meta(http-equiv="Content-Type", content="text/html; charset=UTF-8")
+    title Willkommen zum Wichteln
+    style.
+      /* Add your styles here */
+      body {
+        font-family: sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+        margin: 0;
+        padding: 0;
+        -ms-text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+      }
+      .container {
+        max-width: 580px;
+        margin: 0 auto;
+        padding: 10px;
+      }
+      .content {
+        box-sizing: border-box;
+        display: block;
+        margin: 0 auto;
+        max-width: 580px;
+        padding: 10px;
+      }
+      .button {
+        background-color: #4a9;
+        border-radius: 5px;
+        color: white;
+        display: inline-block;
+        font-size: 14px;
+        font-weight: bold;
+        margin: 0;
+        padding: 12px 25px;
+        text-decoration: none;
+        text-transform: capitalize;
+      }
+  body
+    div.container
+      div.content
+        h1 Hallo #{firstName}!
+
+        p Willkommen zum Weihnachts-Wichteln!
+
+        p Machst du beim Wichteln am Weihnachtsfest mit? Für jeden Teilnehmer wird jemand anderes ausgelost, den er beschenken darf - wer das ist, erfährt der Beschenkte aber erst am Weihnachtsabend.
+        
+        p Die Auslosung findet am #{drawTime} statt.        
+        
+        p Wenn du dabei bist, dann klicke auf den folgenden Link, um dich anzumelden.
+
+        p
+          a.button(href=registerLink) Zur Anmeldung
+
+        p Viele Grüsse,
+        p Das Wichtel-Team

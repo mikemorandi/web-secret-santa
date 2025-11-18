@@ -17,4 +17,9 @@ export class UpdateSettingsDto {
   @ApiProperty({ description: 'Retry seconds for participation changes', required: false })
   @IsOptional()
   retry_sec?: number;
+
+  @ApiProperty({ description: 'IANA timezone identifier (e.g., UTC, Europe/Zurich)', required: false })
+  @IsString()
+  @IsOptional()
+  timezone?: string;
 }

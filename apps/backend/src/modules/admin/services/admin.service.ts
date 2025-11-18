@@ -8,6 +8,8 @@ import { Settings } from '../../wichtel/entities/settings.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UpdateSettingsDto } from '../dto/update-settings.dto';
+import { ScheduleService } from '../../wichtel/services/schedule.service';
+import { MailService } from '../../mail/services/mail.service';
 
 @Injectable()
 export class AdminService {
@@ -15,6 +17,8 @@ export class AdminService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Assignment.name) private assignmentModel: Model<Assignment>,
     @InjectModel(Settings.name) private settingsModel: Model<Settings>,
+    private scheduleService: ScheduleService,
+    private mailService: MailService,
   ) {}
 
   // User Management
@@ -84,7 +88,14 @@ export class AdminService {
     }
 
     Object.assign(settings, updateSettingsDto);
-    return settings.save();
+    const updatedSettings = await settings.save();
+
+    // If drawing_time was updated, notify the scheduler
+    if (updateSettingsDto.drawing_time) {
+      await this.scheduleService.onDrawingTimeUpdated();
+    }
+
+    return updatedSettings;
   }
 
   // View Drawings
@@ -117,5 +128,39 @@ export class AdminService {
   async validatePasswordHash(passwordHash: string): Promise<boolean> {
     const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
     return adminPasswordHash === passwordHash;
+  }
+
+  async resetDrawings(): Promise<void> {
+    await this.assignmentModel.deleteMany({}).exec();
+  }
+
+  async sendWelcomeEmail(userId: string): Promise<void> {
+    const user = await this.userModel.findOne({ id: userId }).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    await this.mailService.sendWelcomeEmail(userId);
+  }
+
+  async sendWelcomeEmailsToAll(): Promise<{ success: number; failed: number; total: number }> {
+    const users = await this.userModel.find().exec();
+    let success = 0;
+    let failed = 0;
+
+    for (const user of users) {
+      try {
+        await this.mailService.sendWelcomeEmail(user.id);
+        success++;
+      } catch (error) {
+        failed++;
+      }
+    }
+
+    return {
+      success,
+      failed,
+      total: users.length
+    };
   }
 }
