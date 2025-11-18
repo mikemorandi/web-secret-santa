@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { WichtelModule } from './modules/wichtel/wichtel.module';
 import { MailModule } from './modules/mail/mail.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { DatabaseInitService } from './shared/utils/db-init';
 import { Settings, SettingsSchema } from './modules/wichtel/entities/settings.entity';
 
@@ -61,6 +62,7 @@ function maskMongoDBUri(uri: string): string {
     ScheduleModule.forRoot(),
     WichtelModule,
     MailModule,
+    AdminModule,
   ],
   providers: [DatabaseInitService],
 })
