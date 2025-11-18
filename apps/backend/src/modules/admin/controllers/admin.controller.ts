@@ -19,7 +19,7 @@ import { UpdateSettingsDto } from '../dto/update-settings.dto';
 import { AdminAuthDto } from '../dto/admin-auth.dto';
 
 @ApiTags('admin')
-@Controller('api/v1/admin')
+@Controller('admin')
 @UseGuards(AdminAuthGuard)
 @ApiBearerAuth()
 export class AdminController {
@@ -27,11 +27,11 @@ export class AdminController {
 
   @Post('auth')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Validate admin password' })
-  @ApiResponse({ status: 200, description: 'Password is valid' })
-  @ApiResponse({ status: 401, description: 'Invalid password' })
+  @ApiOperation({ summary: 'Validate admin password hash' })
+  @ApiResponse({ status: 200, description: 'Password hash is valid' })
+  @ApiResponse({ status: 401, description: 'Invalid password hash' })
   async validatePassword(@Body() adminAuthDto: AdminAuthDto) {
-    const isValid = await this.adminService.validatePassword(adminAuthDto.password);
+    const isValid = await this.adminService.validatePasswordHash(adminAuthDto.passwordHash);
     return { valid: isValid };
   }
 

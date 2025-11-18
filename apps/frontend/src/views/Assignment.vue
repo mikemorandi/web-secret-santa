@@ -38,7 +38,7 @@ export default defineComponent({
     }
 
     const fetchUserDetails = () => {
-      axios.get(`${basepath}/api/v1/users/${userId.value}`)
+      axios.get(`${basepath}/users/${userId.value}`)
         .then(response => {
           user.value = response.data
         })
@@ -48,7 +48,7 @@ export default defineComponent({
     }
 
     const fetchAssignment = () => {
-      axios.get(`${basepath}/api/v1/assignments/${userId.value}`)
+      axios.get(`${basepath}/assignments/${userId.value}`)
         .then(response => {
           assignment.value = response.data
         })

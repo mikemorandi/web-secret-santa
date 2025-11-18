@@ -27,34 +27,25 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getResponse()
         : 'Internal server error';
 
-    // Log the error with detailed context
-    const errorLog = {
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      method: request.method,
-      statusCode: status,
-      message: exception instanceof Error ? exception.message : message,
-      stack: exception instanceof Error ? exception.stack : undefined,
-    };
+    const errorMessage = exception instanceof Error ? exception.message : message;
 
-    // Log based on severity
+    // Log based on severity with clean format
     if (status >= 500) {
       this.logger.error(
-        `Server Error: ${errorLog.message}`,
-        errorLog.stack,
-        JSON.stringify(errorLog, null, 2),
+        `${request.method} ${request.url} - ${status} ${errorMessage}`,
+        exception instanceof Error ? exception.stack : undefined,
       );
+    } else if (status === 404) {
+      // Only log 404s at debug level to reduce noise
+      this.logger.debug(`${request.method} ${request.url} - ${status} ${errorMessage}`);
     } else if (status >= 400) {
-      this.logger.warn(
-        `Client Error: ${errorLog.message}`,
-        JSON.stringify(errorLog, null, 2),
-      );
+      this.logger.warn(`${request.method} ${request.url} - ${status} ${errorMessage}`);
     }
 
     // Send response
     response.status(status).json({
       statusCode: status,
-      timestamp: errorLog.timestamp,
+      timestamp: new Date().toISOString(),
       path: request.url,
       message:
         typeof message === 'string'

@@ -114,8 +114,8 @@ export class AdminService {
     }));
   }
 
-  async validatePassword(password: string): Promise<boolean> {
-    const adminPassword = process.env.ADMIN_PASSWORD;
-    return adminPassword === password;
+  async validatePasswordHash(passwordHash: string): Promise<boolean> {
+    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+    return adminPasswordHash === passwordHash;
   }
 }

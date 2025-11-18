@@ -5,20 +5,20 @@ import { Request } from 'express';
 export class AdminAuthGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const adminPassword = process.env.ADMIN_PASSWORD;
+    const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
 
-    if (!adminPassword) {
+    if (!adminPasswordHash) {
       throw new UnauthorizedException('Admin password not configured');
     }
 
-    // Check for password in Authorization header (Bearer token format)
+    // Check for password hash in Authorization header (Bearer token format)
     const authHeader = request.headers.authorization;
     if (!authHeader) {
       throw new UnauthorizedException('No authorization header provided');
     }
 
-    const [type, password] = authHeader.split(' ');
-    if (type !== 'Bearer' || password !== adminPassword) {
+    const [type, passwordHash] = authHeader.split(' ');
+    if (type !== 'Bearer' || passwordHash !== adminPasswordHash) {
       throw new UnauthorizedException('Invalid admin password');
     }
 

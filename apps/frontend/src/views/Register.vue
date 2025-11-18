@@ -83,7 +83,7 @@ export default defineComponent({
     }
 
     const fetchUserDetails = () => {
-      axios.get(`${basepath}/api/v1/users/${userId.value}`)
+      axios.get(`${basepath}/users/${userId.value}`)
         .then(response => {
           user.value = response.data
         })
@@ -93,7 +93,7 @@ export default defineComponent({
     }
 
     const fetchParticipation = () => {
-      axios.get(`${basepath}/api/v1/participations/${userId.value}`)
+      axios.get(`${basepath}/participations/${userId.value}`)
         .then(response => {
           participating.value = response.data.participating
           modified.value = response.data.modified
@@ -105,7 +105,7 @@ export default defineComponent({
 
     const toggleParticipation = () => {
       const body = { participating: !participating.value }
-      axios.put(`${basepath}/api/v1/participations/${userId.value}`, JSON.stringify(body))
+      axios.put(`${basepath}/participations/${userId.value}`, JSON.stringify(body))
         .then(response => {
           if (response.status === 204) {
             fetchParticipation()
@@ -154,7 +154,7 @@ export default defineComponent({
 
     onMounted(() => {
       setUserId(route.params.userId as string)
-      axios.get(`${basepath}/api/v1/settings`)
+      axios.get(`${basepath}/settings`)
         .then(response => {
           throttlingAlert.dismissSecs = response.data.retrySec
           drawingTime.value = response.data.drawingTime

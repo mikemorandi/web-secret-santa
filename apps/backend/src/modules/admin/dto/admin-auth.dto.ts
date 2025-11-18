@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty } from 'class-validator';
 
 export class AdminAuthDto {
-  @ApiProperty({ description: 'Admin password for authentication' })
+  @ApiProperty({ description: 'SHA-256 hash of the admin password' })
   @IsString()
   @IsNotEmpty()
-  password: string;
+  passwordHash: string;
 }

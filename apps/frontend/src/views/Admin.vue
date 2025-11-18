@@ -391,23 +391,38 @@ export default defineComponent({
     },
   },
   methods: {
+    async hashPassword(password: string): Promise<string> {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    },
+
     async authenticate() {
       this.authError = '';
       try {
-        // Store the password as the auth token
-        this.authToken = this.password;
+        // Hash the password before sending
+        const hashedPassword = await this.hashPassword(this.password);
+        this.authToken = hashedPassword;
 
-        // Test the authentication by making a request
-        await axios.get(`${API_BASEPATH}/admin/users`, {
-          headers: {
-            Authorization: `Bearer ${this.authToken}`,
-          },
-        });
+        // Test the authentication by making a request to the auth endpoint
+        await axios.post(
+          `${API_BASEPATH}/admin/auth`,
+          { passwordHash: hashedPassword },
+          {
+            headers: {
+              Authorization: `Bearer ${hashedPassword}`,
+            },
+          }
+        );
 
         this.isAuthenticated = true;
         this.loadUsers();
-      } catch (error: any) {
-        this.authError = error.response?.data?.message || 'Invalid password';
+      } catch (error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        this.authError = err.response?.data?.message || 'Invalid password';
       }
     },
 
@@ -424,7 +439,7 @@ export default defineComponent({
           headers: this.getAuthHeaders(),
         });
         this.users = response.data;
-      } catch (error: any) {
+      } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Failed to load users:', error);
       } finally {
@@ -485,11 +500,19 @@ export default defineComponent({
 
         // Close modal and reload users
         const modalElement = document.getElementById('userModal');
-        const modal = (window as any).bootstrap.Modal.getInstance(modalElement);
-        modal.hide();
+        interface WindowWithBootstrap extends Window {
+          bootstrap?: {
+            Modal: {
+              getInstance: (element: HTMLElement | null) => { hide: () => void } | null;
+            };
+          };
+        }
+        const modal = (window as WindowWithBootstrap).bootstrap!.Modal.getInstance(modalElement);
+        modal?.hide();
         await this.loadUsers();
-      } catch (error: any) {
-        this.userError = error.response?.data?.message || 'Failed to save user';
+      } catch (error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        this.userError = err.response?.data?.message || 'Failed to save user';
       }
     },
 
@@ -503,8 +526,9 @@ export default defineComponent({
           headers: this.getAuthHeaders(),
         });
         await this.loadUsers();
-      } catch (error: any) {
-        alert('Failed to delete user: ' + (error.response?.data?.message || error.message));
+      } catch (error) {
+        const err = error as { response?: { data?: { message?: string } }; message?: string };
+        alert('Failed to delete user: ' + (err.response?.data?.message || err.message));
       }
     },
 
@@ -530,7 +554,7 @@ export default defineComponent({
           assignment_hint: settings.assignment_hint || '',
           retry_sec: settings.retry_sec || 5,
         };
-      } catch (error: any) {
+      } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Failed to load settings:', error);
       } finally {
@@ -561,9 +585,10 @@ export default defineComponent({
         setTimeout(() => {
           this.settingsSuccess = false;
         }, 3000);
-      } catch (error: any) {
+      } catch (error) {
+        const err = error as { response?: { data?: { message?: string } } };
         this.settingsError =
-          error.response?.data?.message || 'Failed to update settings';
+          err.response?.data?.message || 'Failed to update settings';
       }
     },
 
@@ -574,7 +599,7 @@ export default defineComponent({
           headers: this.getAuthHeaders(),
         });
         this.drawings = response.data;
-      } catch (error: any) {
+      } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Failed to load drawings:', error);
       } finally {

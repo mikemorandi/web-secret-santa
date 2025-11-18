@@ -19,16 +19,45 @@ export class MailService {
     @InjectModel(Settings.name) private settingsModel: Model<Settings>,
   ) {
     this.initializeTransporter();
+    this.verifyConnection();
+  }
+
+  private async verifyConnection() {
+    try {
+      await this.transporter.verify();
+      this.logger.log('✓ Mail server connection verified successfully');
+    } catch (error) {
+      this.logger.error('✗ Mail server connection failed:', error.message);
+      this.logger.warn('Emails will fail to send. Please check your MAIL_* configuration.');
+    }
   }
 
   private initializeTransporter() {
+    const host = this.configService.get<string>('MAIL_HOST');
+    const port = this.configService.get<number>('MAIL_PORT');
+    const user = this.configService.get<string>('MAIL_USER');
+    const pass = this.configService.get<string>('MAIL_PASSWORD');
+
+    // Port 465 uses implicit SSL, port 587 uses STARTTLS
+    const secure = port === 465;
+
+    this.logger.log(`Initializing mail transporter: ${host}:${port} (secure: ${secure})`);
+
     this.transporter = nodemailer.createTransport({
-      host: this.configService.get<string>('MAIL_HOST'),
-      port: this.configService.get<number>('MAIL_PORT'),
-      secure: false,
+      host: host,
+      port: port,
+      secure: secure,
       auth: {
-        user: this.configService.get<string>('MAIL_USER'),
-        pass: this.configService.get<string>('MAIL_PASSWORD'),
+        user: user,
+        pass: pass,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
+      logger: false,
+      debug: false,
+      tls: {
+        rejectUnauthorized: false,
       },
     });
   }
