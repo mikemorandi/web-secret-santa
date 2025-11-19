@@ -4,4 +4,4 @@ interface WindowWithConfig extends Window {
   VUE_APP_API_BASEPATH?: string;
 }
 
-export const API_BASEPATH = (window as WindowWithConfig).VUE_APP_API_BASEPATH || process.env.VUE_APP_API_BASEPATH
+export const API_BASEPATH = (window as WindowWithConfig).VUE_APP_API_BASEPATH || process.env.VUE_APP_API_BASEPATH || '/api/v1'

@@ -1,25 +1,14 @@
 services:
-  frontend:
-    build:
-      context: .
-      dockerfile: apps/frontend/Dockerfile
-    image: "secretsanta-ui:latest"
-    restart: always
-    ports:
-      - "80:80"
-    environment:
-      - VUE_APP_API_BASEPATH=https://wichteln.mydomain.org
   secretsanta:
-    depends_on:
-      - backend
-  backend:
     build:
       context: .
-      dockerfile: apps/backend/Dockerfile
-    image: "secretsanta-api:latest"
+      dockerfile: Dockerfile
+    image: "freemantp/secretsanta:latest"
     restart: always
     ports:
-      - "8080:3000"
+      - "80:3000"
+    depends_on:
+      - mongodb
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/secretsanta
       - MAIL_HOST=smtp.mail.net
@@ -28,13 +17,11 @@ services:
       - MAIL_FROM=Weihnachtswichtel <user@mydomain.org>
       - MAIL_PASSWORD=MY_PW_HERE
       - PUBLIC_BASE_URL=https://wichteln.example.com
-      - ADMIN_PASSWORD_HASH=your-sha256-password-hash-here  
+      - ADMIN_PASSWORD_HASH=your-sha256-password-hash-here
   mongodb:
     image: "mongo:latest"
     restart: always
     volumes:
-       - type: bind
-         source: "/path/to/mongodbstore"
-         target: "/data/db"
+       - ./path/to/dbfolder:/data/db
     ports:
       - "27017:27017"
